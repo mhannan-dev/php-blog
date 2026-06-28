@@ -25,10 +25,10 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Table structure for table `contact`
+-- Table structure for table `contacts`
 --
 
-CREATE TABLE `contact` (
+CREATE TABLE `contacts` (
   `id` int(11) NOT NULL,
   `fname` varchar(100) NOT NULL,
   `lname` varchar(100) NOT NULL,
@@ -39,28 +39,28 @@ CREATE TABLE `contact` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Dumping data for table `contact`
+-- Dumping data for table `contacts`
 --
 
-INSERT INTO `contact` (`id`, `fname`, `lname`, `email`, `msg`, `status`, `created`) VALUES
+INSERT INTO `contacts` (`id`, `fname`, `lname`, `email`, `msg`, `status`, `created`) VALUES
 (3, 'sdfdsf', 'asdfdf', 'author@gmail.com', 'adfdfd', 0, '0000-00-00 00:00:00');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `footer`
+-- Table structure for table `footers`
 --
 
-CREATE TABLE `footer` (
+CREATE TABLE `footers` (
   `id` int(11) NOT NULL,
   `note` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Dumping data for table `footer`
+-- Dumping data for table `footers`
 --
 
-INSERT INTO `footer` (`id`, `note`) VALUES
+INSERT INTO `footers` (`id`, `note`) VALUES
 (1, 'Muhammad Hannan Ali');
 
 -- --------------------------------------------------------
@@ -88,10 +88,10 @@ INSERT INTO `pages` (`id`, `name`, `body`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `site_info`
+-- Table structure for table `site_infos`
 --
 
-CREATE TABLE `site_info` (
+CREATE TABLE `site_infos` (
   `logo` varchar(255) NOT NULL,
   `title` varchar(100) NOT NULL,
   `slogan` varchar(100) NOT NULL,
@@ -99,10 +99,10 @@ CREATE TABLE `site_info` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Dumping data for table `site_info`
+-- Dumping data for table `site_infos`
 --
 
-INSERT INTO `site_info` (`logo`, `title`, `slogan`, `id`) VALUES
+INSERT INTO `site_infos` (`logo`, `title`, `slogan`, `id`) VALUES
 ('upload/02a874388f.png', 'MH Blog', 'Write for knowledge', 3);
 
 -- --------------------------------------------------------
@@ -131,19 +131,19 @@ INSERT INTO `sliders` (`id`, `title`, `image`, `timestamp`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tbl_category`
+-- Table structure for table `categories`
 --
 
-CREATE TABLE `tbl_category` (
+CREATE TABLE `categories` (
   `id` int(11) NOT NULL,
   `name` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Dumping data for table `tbl_category`
+-- Dumping data for table `categories`
 --
 
-INSERT INTO `tbl_category` (`id`, `name`) VALUES
+INSERT INTO `categories` (`id`, `name`) VALUES
 (1, 'Java'),
 (5, 'SQL'),
 (6, 'Javascript'),
@@ -154,10 +154,10 @@ INSERT INTO `tbl_category` (`id`, `name`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tbl_post`
+-- Table structure for table `posts`
 --
 
-CREATE TABLE `tbl_post` (
+CREATE TABLE `posts` (
   `id` int(11) NOT NULL,
   `cat` int(11) NOT NULL,
   `title` varchar(100) NOT NULL,
@@ -170,10 +170,10 @@ CREATE TABLE `tbl_post` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Dumping data for table `tbl_post`
+-- Dumping data for table `posts`
 --
 
-INSERT INTO `tbl_post` (`id`, `cat`, `title`, `body`, `image`, `author`, `tags`, `date`, `userid`) VALUES
+INSERT INTO `posts` (`id`, `cat`, `title`, `body`, `image`, `author`, `tags`, `date`, `userid`) VALUES
 (10, 7, 'Lorem Ippsumma', '<p>One of the most common causes of this problem is adding an extra line after the closing PHP tag in an include file, such as the one Dreamweaver creates in the <kbd class=\"userinput\">Connections</kbd> folder with details of your MySQL ...</p>', 'upload/5d44b0c2ed.jpg', 'admin', 'common ', '2019-09-05 09:50:41', 1),
 (14, 5, 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', '<p>\"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\"</p>', 'upload/8dd63fbc58.png', 'admin', 'Lorem ', '2019-09-05 09:51:16', 1),
 (22, 8, 'Female job seeker gang-raped in Shyamoli', '<p>During the interview, two staff of the office feed the girl soft drinks mixed with sedative pills and raped her, the OC told The Daily Star quoting the victim.</p>\r\n<p>The law enforcers arrested Fahim Ahmed Foyez, 31, one of the accused from the office last night after the victim filed a case against the two with the police station yesterday, he said.</p>\r\n<p>The police official said they were trying to arrest another accused.</p>', 'upload/064e4cfa5c.png', 'admin', 'gang-raped ', '2019-09-05 09:51:34', 1),
@@ -183,10 +183,10 @@ INSERT INTO `tbl_post` (`id`, `cat`, `title`, `body`, `image`, `author`, `tags`,
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tbl_social`
+-- Table structure for table `socials`
 --
 
-CREATE TABLE `tbl_social` (
+CREATE TABLE `socials` (
   `id` int(11) NOT NULL,
   `fb` varchar(100) NOT NULL,
   `tw` varchar(100) NOT NULL,
@@ -194,19 +194,19 @@ CREATE TABLE `tbl_social` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Dumping data for table `tbl_social`
+-- Dumping data for table `socials`
 --
 
-INSERT INTO `tbl_social` (`id`, `fb`, `tw`, `ln`) VALUES
+INSERT INTO `socials` (`id`, `fb`, `tw`, `ln`) VALUES
 (3, 'https://www.facebook.com/muhammadhannanali', 'https://github.com/MyCodeBin', 'https://www.linkedin.com/in/muhammad-hannan-87abb948/');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tbl_user`
+-- Table structure for table `users`
 --
 
-CREATE TABLE `tbl_user` (
+CREATE TABLE `users` (
   `id` int(11) NOT NULL,
   `name` varchar(100) NOT NULL,
   `username` varchar(50) NOT NULL,
@@ -218,10 +218,10 @@ CREATE TABLE `tbl_user` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Dumping data for table `tbl_user`
+-- Dumping data for table `users`
 --
 
-INSERT INTO `tbl_user` (`id`, `name`, `username`, `email`, `password`, `details`, `role`, `userid`) VALUES
+INSERT INTO `users` (`id`, `name`, `username`, `email`, `password`, `details`, `role`, `userid`) VALUES
 (1, 'Muhammad Hannan Ali', 'admin', 'mdhannan.info@gmail.com', '81dc9bdb52d04dc20036dbd8313ed055', '<p>MD. HANNAN ALI</p>', 0, 0),
 (8, 'Mr. Author', 'author', 'author@gmail.com', 'd5b7fb5a8edfeadce678a98282fbca57', '<p>Author bio</p>', 1, 0),
 (15, '', 'tuhin', 'tuhin@yahoo.com', '81dc9bdb52d04dc20036dbd8313ed055', '', 2, 0);
@@ -250,7 +250,7 @@ INSERT INTO `themes` (`id`, `theme`) VALUES
 -- Table structure for table `users`
 --
 
-CREATE TABLE `users` (
+CREATE TABLE `members` (
   `id` int(11) NOT NULL,
   `name` varchar(100) NOT NULL,
   `email` varchar(255) NOT NULL,
@@ -262,11 +262,11 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `name`, `email`, `username`, `password`) VALUES
+INSERT INTO `members` (`id`, `name`, `email`, `username`, `password`) VALUES
 (1, 'MD. HANNAN ALI', 'hannan@arobil.com', 'admin', 'e10adc3949ba59abbe56e057f20f883e'),
 (2, 'Mahmudul Hasan', 'hasan@gmail.com', 'hasan', 'e10adc3949ba59abbe56e057f20f883e'),
 (3, 'Shahjalal', 'jalal@gmail.com', 'jalal', 'e10adc3949ba59abbe56e057f20f883e'),
-(4, 'Abdul Manna', 'amannan@gmail.com', 'amannan', 'e10adc3949ba59abbe56e057f20f883e'),
+(4, 'Abdul Mannan', 'amannan@gmail.com', 'amannan', 'e10adc3949ba59abbe56e057f20f883e'),
 (5, 'Abdus Salam', 'asalam@gmail.com', 'asalam', 'e10adc3949ba59abbe56e057f20f883e'),
 (6, 'Saddam Hossain Arif', 'saddam@gmail.com', 'saddam', 'e10adc3949ba59abbe56e057f20f883e'),
 (7, 'Abdul Bari', 'bari@gmail.com', 'abari', 'e10adc3949ba59abbe56e057f20f883e');
@@ -276,15 +276,15 @@ INSERT INTO `users` (`id`, `name`, `email`, `username`, `password`) VALUES
 --
 
 --
--- Indexes for table `contact`
+-- Indexes for table `contacts`
 --
-ALTER TABLE `contact`
+ALTER TABLE `contacts`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `footer`
+-- Indexes for table `footers`
 --
-ALTER TABLE `footer`
+ALTER TABLE `footers`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -295,9 +295,9 @@ ALTER TABLE `pages`
   ADD UNIQUE KEY `name` (`name`);
 
 --
--- Indexes for table `site_info`
+-- Indexes for table `site_infos`
 --
-ALTER TABLE `site_info`
+ALTER TABLE `site_infos`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -307,28 +307,28 @@ ALTER TABLE `sliders`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `tbl_category`
+-- Indexes for table `categories`
 --
-ALTER TABLE `tbl_category`
+ALTER TABLE `categories`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `tbl_post`
+-- Indexes for table `posts`
 --
-ALTER TABLE `tbl_post`
+ALTER TABLE `posts`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `title` (`title`);
 
 --
--- Indexes for table `tbl_social`
+-- Indexes for table `socials`
 --
-ALTER TABLE `tbl_social`
+ALTER TABLE `socials`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `tbl_user`
+-- Indexes for table `users`
 --
-ALTER TABLE `tbl_user`
+ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `name` (`name`),
   ADD UNIQUE KEY `username` (`username`),
@@ -341,9 +341,9 @@ ALTER TABLE `themes`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `users`
+-- Indexes for table `members`
 --
-ALTER TABLE `users`
+ALTER TABLE `members`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -351,15 +351,15 @@ ALTER TABLE `users`
 --
 
 --
--- AUTO_INCREMENT for table `contact`
+-- AUTO_INCREMENT for table `contacts`
 --
-ALTER TABLE `contact`
+ALTER TABLE `contacts`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
--- AUTO_INCREMENT for table `footer`
+-- AUTO_INCREMENT for table `footers`
 --
-ALTER TABLE `footer`
+ALTER TABLE `footers`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
@@ -369,9 +369,9 @@ ALTER TABLE `pages`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
--- AUTO_INCREMENT for table `site_info`
+-- AUTO_INCREMENT for table `site_infos`
 --
-ALTER TABLE `site_info`
+ALTER TABLE `site_infos`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
@@ -381,27 +381,27 @@ ALTER TABLE `sliders`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
 
 --
--- AUTO_INCREMENT for table `tbl_category`
+-- AUTO_INCREMENT for table `categories`
 --
-ALTER TABLE `tbl_category`
+ALTER TABLE `categories`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
--- AUTO_INCREMENT for table `tbl_post`
+-- AUTO_INCREMENT for table `posts`
 --
-ALTER TABLE `tbl_post`
+ALTER TABLE `posts`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
--- AUTO_INCREMENT for table `tbl_social`
+-- AUTO_INCREMENT for table `socials`
 --
-ALTER TABLE `tbl_social`
+ALTER TABLE `socials`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
--- AUTO_INCREMENT for table `tbl_user`
+-- AUTO_INCREMENT for table `users`
 --
-ALTER TABLE `tbl_user`
+ALTER TABLE `users`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
@@ -411,12 +411,17 @@ ALTER TABLE `themes`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
--- AUTO_INCREMENT for table `users`
+-- AUTO_INCREMENT for table `members`
 --
-ALTER TABLE `users`
+ALTER TABLE `members`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+
+
+
+

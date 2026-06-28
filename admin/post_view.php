@@ -1,212 +1,95 @@
-﻿<?php include '../admin/inc/header.php'; ?>
+<?php include '../admin/inc/header.php'; ?>
 <?php include '../admin/inc/sidebar.php'; ?>
+
 <?php 
-     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        echo "<script>window.location = 'post_list.php';</script>";
-        
-    } else{
-        $id = $_GET['post_id'];
-    }
+if (!isset($_GET['post_id']) || (int) $_GET['post_id'] <= 0) {
+    header('Location: post_list.php');
+    exit();
+}
 
- ?>
+$id = (int) $_GET['post_id'];
 
-<div class="grid_10">
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Location: post_list.php');
+    exit();
+}
 
-    <div class="box round first grid">
-        <h2>Update Post</h2>
-        <div class="block">
-            <?php
-            if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-               
-                $title = mysqli_real_escape_string($db->link, $_POST['title']);
-                $body = mysqli_real_escape_string($db->link, $_POST['body']);
-                $cat = mysqli_real_escape_string($db->link, $_POST['cat']);
-                $author = mysqli_real_escape_string($db->link, $_POST['author']);
-                $tags = mysqli_real_escape_string($db->link, $_POST['tags']);
-                $userId = mysqli_real_escape_string($db->link, $_POST['userId']);
-                
-                
-                // Image upload
-                $permited = array('jpg', 'jpeg', 'png', 'gif');
-                $file_name = $_FILES['image']['name'];
-                $file_size = $_FILES['image']['size'];
-                $file_temp = $_FILES['image']['tmp_name'];
-                $div = explode('.', $file_name);
-                $file_ext = strtolower(end($div));
-                $unique_image = substr(md5(time()), 0, 10) . '.' . $file_ext;
-                $uploaded_image = "upload/" . $unique_image;
-                //Image upload
+$post_result = $postModel->getById($id);
+if (!$post_result) {
+    header('Location: post_list.php');
+    exit();
+}
+?>
 
-                 
-                if (!empty($file_name)) {
-                    if ($title == ""||$body == ""||$cat == ""||$author == ""||$file_name == ""||$tags == ""||$userId == "") {
-
-                    echo "<span class='error'>Field must not be empty</span>";
-                }
-
-                    if ($file_size > 1048567) {
-                        echo "<span class='error'>Image Size should be less then 1MB!
-                                 </span>";
-                    } elseif (in_array($file_ext, $permited) === false) {
-                        echo "<span class='error'>You can upload only:-"
-                        . implode(', ', $permited) . "</span>";
-                    } else {
-                       
-                        move_uploaded_file($file_temp, $uploaded_image);
-                        $query = "UPDATE tbl_post SET
-                            title = '$title',
-                            body = '$body',
-                            cat = '$cat',
-                            author = '$author',
-                            image = '$uploaded_image',
-                            tags = '$tags',
-                            userId = '$userId',
-                            WHERE id='$id'
-                        ";
-
-
-                        $inserted_rows = $db->insert($query);
-
-                        if ($inserted_rows) {
-                            #echo "<span class='success'>Post Updated Successfully.</span>";
-                            echo "<script>window.location = 'postlist.php';</script>";
-                            
-                                 
-                        } else {
-                            echo "<span class='error'>Post Not Updated!</span>";
-                        }
-                    }
-                } else{
-                    $query = "UPDATE tbl_post SET 
-                            title = '$title',
-                            body = '$body',
-                            cat = '$cat',
-                            author = '$author',
-                            #image = '$uploaded_image',
-                            tags = '$tags' WHERE id='$id'
-                        ";
-
-
-                        $inserted_rows = $db->insert($query);
-
-                        if ($inserted_rows) {
-                            echo "<script>window.location = 'postlist.php';</script>";
-                            
-                                 
-                        } else {
-                            echo "<span class='error'>Post Not Updated!</span>";
-                        }
-
-                }  
-                }
-                ?>
-               <?php 
-                    $query = "SELECT * FROM tbl_post WHERE id='$id' ORDER BY id DESC";
-                    $post = $db->select($query);
-                        while ($post_result = $post->fetch_assoc()) {
-
-                          #print_r($post_result);
-                        
-
-                ?>
-                <form action="" method="post" enctype="multipart/form-data">
-                    <table class="form">
-
-                        <tr>
-                            <td>
-                                <label>Title</label>
-                            </td>
-                            <td>
-                                <input readonly type="text" name="title" value="<?php echo $post_result['title']; ?>" class="medium"/>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <label>Author</label>
-                            </td>
-                            <td>
-                                <input readonly type="text" value="<?php echo Session::get('userName');?>" name="author" class="medium"/>
-                                 <input type="hidden" value="<?php echo Session::get('userId');?>"  name="userId" class="medium"/>
-                            </td>
-                        </tr>
-
-                          <tr>
-                            <td>
-                                <label>Category</label>
-                            </td>
-                            <td>
-                                <select id="select" name="cat">
-
-
-                                <?php
-                                $query = "SELECT * FROM tbl_category ";
-                                $category = $db->select($query);
-                                if ($category) {
-                                    while ($result = $category->fetch_assoc()) {
-                                        ?>
-                                            <option 
-
-                                             <?php  
-                                                if ($post_result['cat'] == $result['id']) { ?> 
-                                                selected="selected"
-                                             <?php }  ?> value="<?php echo $result['id'] ?>"><?php echo $result['name'] ?>
-                                                 
-                                             </option>
-                                        <?php }
-                                    } ?>
-                                </select>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <label>Tags</label>
-                            </td>
-                            <td>
-                                <input readonly type="text" value="<?php echo $post_result['tags']; ?>" name="tags" class="medium" />
-                            </td>
-                        </tr>
-
-
-                        <tr>
-                            <td>
-                                <label>Image</label>
-                            </td>
-                            <td>
-                                <img src="<?php echo $post_result['image'] ?>" height="100px; width:100px;">
-                                <input  name="image" type="file" readonly/>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="vertical-align: top; padding-top: 9px;">
-                                <label>Content</label>
-                            </td>
-                            <td>
-                                <textarea class="tinymce" name="body" readonly="">
-                                    <?php echo $post_result['body']; ?>
-                                </textarea>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td>
-                                <input type="submit" name="submit" Value="OK" />
-                            </td>
-                        </tr>
-                    </table>
-                </form>
-            <?php }  ?>
-            </div>
-        </div>
+<div class="glass-card rounded-3xl p-6 sm:p-8 shadow-xl shadow-black/5 flex flex-col gap-6">
+    <div class="flex flex-col gap-1 border-b border-white/5 pb-4">
+        <h2 class="text-xl font-bold font-outfit text-white">View Post Details</h2>
+        <p class="text-slate-400 text-xs font-medium">Read-only presentation of post contents</p>
     </div>
 
-    <script type="text/javascript">
-        $(document).ready(function () {
-            setupTinyMCE();
-            setDatePicker('date-picker');
-            $('input[type="checkbox"]').fancybutton();
-            $('input[type="radio"]').fancybutton();
-        });
-    </script>
+    <form action="" method="post" class="flex flex-col gap-5">
+        <!-- Row 1: Title & Author -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-450">Post Title</span>
+                <div class="w-full bg-slate-900/50 border border-white/5 rounded-xl px-4 py-3 text-sm text-slate-300 font-medium">
+                    <?php echo Format::e($post_result['title']); ?>
+                </div>
+            </div>
+            
+            <div class="flex flex-col gap-1.5">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-455">Author Name</span>
+                <div class="w-full bg-slate-900/50 border border-white/5 rounded-xl px-4 py-3 text-sm text-slate-350">
+                    <?php echo Format::e($post_result['author']); ?>
+                </div>
+            </div>
+        </div>
 
+        <!-- Row 2: Category & Tags -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-455">Category ID</span>
+                <div class="w-full bg-slate-900/50 border border-white/5 rounded-xl px-4 py-3 text-sm text-slate-350">
+                    <?php
+                    $catData = $categoryModel->getById((int) $post_result['cat']);
+                    echo $catData ? Format::e($catData['name']) : 'None';
+                    ?>
+                </div>
+            </div>
+            
+            <div class="flex flex-col gap-1.5">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-455">SEO Tags</span>
+                <div class="w-full bg-slate-900/50 border border-white/5 rounded-xl px-4 py-3 text-sm text-slate-350">
+                    <?php echo Format::e($post_result['tags']); ?>
+                </div>
+            </div>
+        </div>
 
-    <?php include '../admin/inc/footer.php'; ?>
+        <!-- Featured Image -->
+        <?php if ($post_result['image']): ?>
+            <div class="flex flex-col gap-1.5">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-455">Featured Image</span>
+                <div class="rounded-xl overflow-hidden max-w-sm aspect-[16/10] bg-slate-900 border border-white/5">
+                    <img src="<?php echo Format::e($post_result['image']); ?>" class="w-full h-full object-cover" alt="Post featured image" />
+                </div>
+            </div>
+        <?php endif; ?>
+
+        <!-- Post Body -->
+        <div class="flex flex-col gap-1.5">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-455">Post Content Body</span>
+            <div class="w-full bg-slate-900/50 border border-white/5 rounded-2xl p-6 text-sm text-slate-300 leading-relaxed max-h-[300px] overflow-y-auto">
+                <?php echo $post_result['body']; ?>
+            </div>
+        </div>
+
+        <div class="mt-2">
+            <button type="submit" name="submit" 
+                    class="px-6 py-3 bg-brand-500 hover:bg-brand-600 active:bg-brand-700 text-white text-sm font-semibold rounded-xl transition-colors duration-200 cursor-pointer shadow-md shadow-brand-500/10">
+                Back to Post List
+            </button>
+        </div>
+    </form>
+</div>
+
+<?php include '../admin/inc/footer.php'; ?>

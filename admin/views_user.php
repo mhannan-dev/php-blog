@@ -1,105 +1,66 @@
 <?php include '../admin/inc/header.php'; ?>
 <?php include '../admin/inc/sidebar.php'; ?>
+
 <?php 
-    if (!isset($_GET['userId']) || $_GET['userId'] == NULL) {
-        echo "<script>window.location = 'user_list.php';</script>";
-        
-    } else{
-        $userId = $_GET['userId'];
-    }
+if (!isset($_GET['userId']) || (int) $_GET['userId'] <= 0) {
+    header('Location: user_list.php');
+    exit();
+}
 
- ?>
+$userId = (int) $_GET['userId'];
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Location: user_list.php');
+    exit();
+}
 
+$user_result = $userModel->getById($userId);
+if (!$user_result) {
+    header('Location: user_list.php');
+    exit();
+}
+?>
 
-<div class="grid_10">
-
-    <div class="box round first grid">
-        <h2>View Profile</h2>
-       
-            <?php
-            if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-                    echo "<script>window.location = 'user_list.php';</script>";
-                }
-                ?>
-                 <div class="block">
-
-               <?php 
-                  
-                  $query = "SELECT * FROM tbl_user WHERE id='$userId'";
-                  
-                  $getUser = $db->select($query);
-                  #print_r($getUser);
-                  
-                    if ($getUser) {
-                        while ($user_result = $getUser->fetch_assoc()) {
-                            #print_r($user_result);
-                ?>
-                <form action="" method="post">
-                    <table class="form">
-
-                        <tr>
-                            <td>
-                                <label>Name</label>
-                            </td>
-                            <td>
-                                <input type="text" name="name" readonly value="<?php echo $user_result['name']; ?>" class="medium"/>
-                            </td>
-                        </tr>
-
-
-                        <tr>
-                            <td>
-                                <label>Username</label>
-                            </td>
-                            <td>
-                                <input type="text" name="username" readonly value="<?php echo $user_result['username']; ?>" class="medium"/>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <label>Email</label>
-                            </td>
-                            <td>
-                                <input type="text" name="email" readonly value="<?php echo $user_result['email']; ?>" class="medium"/>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <label>Details</label>
-                            </td>
-                            <td>
-                                
-                                <textarea name="details" id="mytextarea" cols="30" rows="10">
-                                <?php echo $user_result['details']; ?>
-                                </textarea>
-                            </td>
-                        </tr>
-                       
-                        <tr>
-                            <td></td>
-                            <td>
-                                <input type="submit" name="submit" Value="Ok" />
-                            </td>
-                        </tr>
-                    </table>
-                </form>
-                
-            <?php } } ?>
-            
-           
-            </div>
-        </div>
+<div class="glass-card rounded-3xl p-6 sm:p-8 shadow-xl shadow-black/5 flex flex-col gap-6">
+    <div class="flex flex-col gap-1 border-b border-white/5 pb-4">
+        <h2 class="text-xl font-bold font-outfit text-white">View Profile</h2>
+        <p class="text-slate-400 text-xs font-medium">Read-only profile info of admin panel user</p>
     </div>
 
-    <script type="text/javascript">
-        $(document).ready(function () {
-            setupTinyMCE();
-            setDatePicker('date-picker');
-            $('input[type="checkbox"]').fancybutton();
-            $('input[type="radio"]').fancybutton();
-        });
-    </script>
+    <form action="" method="post" class="flex flex-col gap-5 max-w-xl">
+        <div class="flex flex-col gap-1.5">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-455">Full Name</span>
+            <div class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 font-semibold">
+                <?php echo $user_result['name'] ? Format::e($user_result['name']) : 'None'; ?>
+            </div>
+        </div>
 
+        <div class="flex flex-col gap-1.5">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-455">Username</span>
+            <div class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200">
+                <?php echo Format::e($user_result['username']); ?>
+            </div>
+        </div>
 
-    <?php include '../admin/inc/footer.php'; ?>
+        <div class="flex flex-col gap-1.5">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-455">Email Address</span>
+            <div class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200">
+                <?php echo $user_result['email'] ? Format::e($user_result['email']) : 'None'; ?>
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-455">Details / Bio</span>
+            <textarea readonly class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none min-h-[140px]" rows="5"><?php echo Format::e($user_result['details']); ?></textarea>
+        </div>
+
+        <div class="mt-2">
+            <button type="submit" name="submit" 
+                    class="px-6 py-3 bg-brand-500 hover:bg-brand-600 active:bg-brand-700 text-white text-sm font-semibold rounded-xl transition-colors duration-200 cursor-pointer shadow-md shadow-brand-500/10">
+                Back to User List
+            </button>
+        </div>
+    </form>
+</div>
+
+<?php include '../admin/inc/footer.php'; ?>
