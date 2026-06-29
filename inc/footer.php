@@ -31,7 +31,7 @@ $footerPages  = $pageModel->getAll();
             <ul class="grid grid-cols-2 gap-2 text-sm text-slate-450">
                 <?php if ($footerCats): while ($cat = $footerCats->fetch_assoc()): ?>
                     <li>
-                        <a href="cat_posts.php?cat_post=<?php echo (int) $cat['id']; ?>" 
+                        <a href="category/<?php echo Format::e($cat['slug']); ?>" 
                            class="text-slate-400 hover:text-white transition-colors duration-200 py-0.5 block">
                             <?php echo Format::e($cat['name']); ?>
                         </a>

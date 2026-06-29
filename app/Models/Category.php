@@ -20,19 +20,32 @@ class Category
         return $result ? $result->fetch_assoc() : false;
     }
 
+    public function getByParam(string $param): array|false
+    {
+        $param = $this->db->escape(trim($param));
+        if (is_numeric($param)) {
+            $result = $this->db->select("SELECT * FROM categories WHERE id = $param LIMIT 1");
+        } else {
+            $result = $this->db->select("SELECT * FROM categories WHERE slug = '$param' LIMIT 1");
+        }
+        return $result ? $result->fetch_assoc() : false;
+    }
+
     public function create(string $name): bool
     {
         $name = $this->db->escape(trim($name));
+        $slug = Format::slugify($name);
         return $this->db->insert(
-            "INSERT INTO categories (name) VALUES ('$name')"
+            "INSERT INTO categories (name, slug) VALUES ('$name', '$slug')"
         );
     }
 
     public function update(int $id, string $name): bool
     {
         $name = $this->db->escape(trim($name));
+        $slug = Format::slugify($name);
         return $this->db->update(
-            "UPDATE categories SET name = '$name' WHERE id = $id"
+            "UPDATE categories SET name = '$name', slug = '$slug' WHERE id = $id"
         );
     }
 

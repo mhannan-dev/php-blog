@@ -1,20 +1,21 @@
 <?php
 require_once __DIR__ . '/app/bootstrap.php';
 
-if (!isset($_GET['cat_post']) || (int) $_GET['cat_post'] <= 0) {
+$catParam = trim($_GET['cat_post'] ?? '');
+
+if (empty($catParam)) {
     header('Location: index.php');
     exit();
 }
 
-$catId    = (int) $_GET['cat_post'];
-$category = $categoryModel->getById($catId);
+$category = $categoryModel->getByParam($catParam);
 
 if (!$category) {
     header('Location: 404.php');
     exit();
 }
 
-$catPosts = $postModel->getByCat($catId);
+$catPosts = $postModel->getByCat((int) $category['id']);
 ?>
 
 <?php include './inc/header.php'; ?>

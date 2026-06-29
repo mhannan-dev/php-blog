@@ -14,7 +14,7 @@ $sidebarPages  = $pageModel->getAll();
         <ul class="flex flex-col gap-2">
             <?php if ($sidebarCats): while ($cat = $sidebarCats->fetch_assoc()): ?>
                 <li>
-                    <a href="cat_posts.php?cat_post=<?php echo (int) $cat['id']; ?>" 
+                    <a href="category/<?php echo Format::e($cat['slug']); ?>" 
                        class="flex items-center justify-between text-sm text-slate-300 hover:text-white hover:translate-x-1 transition-all duration-200 py-1">
                         <span><?php echo Format::e($cat['name']); ?></span>
                         <i class="fa-solid fa-chevron-right text-[10px] text-slate-500"></i>

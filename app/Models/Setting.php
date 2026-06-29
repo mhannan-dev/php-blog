@@ -4,13 +4,13 @@
  * Site — all database operations for site configuration
  * (site info, social links, footer, sliders).
  */
-class Site
+class Setting
 {
     public function __construct(private Database $db) {}
 
     public function getInfo(): array|false
     {
-        $result = $this->db->select("SELECT * FROM site_infos LIMIT 1");
+        $result = $this->db->select("SELECT * FROM settings LIMIT 1");
         return $result ? $result->fetch_assoc() : false;
     }
 
@@ -37,7 +37,7 @@ class Site
 
     public function getAllSiteInfo(): mysqli_result|false
     {
-        return $this->db->select("SELECT * FROM site_infos ORDER BY id");
+        return $this->db->select("SELECT * FROM settings ORDER BY id");
     }
 
     public function getAllSocial(): mysqli_result|false
@@ -56,7 +56,7 @@ class Site
     public function getSiteInfoById(int $id): array|false
     {
         $result = $this->db->select(
-            "SELECT * FROM site_infos WHERE id = $id LIMIT 1"
+            "SELECT * FROM settings WHERE id = $id LIMIT 1"
         );
         return $result ? $result->fetch_assoc() : false;
     }
@@ -75,7 +75,7 @@ class Site
         $title  = $this->db->escape($title);
         $slogan = $this->db->escape($slogan);
         return $this->db->insert(
-            "INSERT INTO site_infos (logo, title, slogan)
+            "INSERT INTO settings (logo, title, slogan)
              VALUES ('$logo', '$title', '$slogan')"
         );
     }

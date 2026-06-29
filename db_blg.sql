@@ -88,10 +88,10 @@ INSERT INTO `pages` (`id`, `name`, `body`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `site_infos`
+-- Table structure for table `settings`
 --
 
-CREATE TABLE `site_infos` (
+CREATE TABLE `settings` (
   `logo` varchar(255) NOT NULL,
   `title` varchar(100) NOT NULL,
   `slogan` varchar(100) NOT NULL,
@@ -99,10 +99,10 @@ CREATE TABLE `site_infos` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Dumping data for table `site_infos`
+-- Dumping data for table `settings`
 --
 
-INSERT INTO `site_infos` (`logo`, `title`, `slogan`, `id`) VALUES
+INSERT INTO `settings` (`logo`, `title`, `slogan`, `id`) VALUES
 ('upload/02a874388f.png', 'MH Blog', 'Write for knowledge', 3);
 
 -- --------------------------------------------------------
@@ -295,9 +295,10 @@ ALTER TABLE `pages`
   ADD UNIQUE KEY `name` (`name`);
 
 --
--- Indexes for table `site_infos`
+-- Indexes for table `settings`
 --
-ALTER TABLE `site_infos`
+
+ALTER TABLE `settings`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -369,9 +370,10 @@ ALTER TABLE `pages`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
--- AUTO_INCREMENT for table `site_infos`
+-- AUTO_INCREMENT for table `settings`
 --
-ALTER TABLE `site_infos`
+
+ALTER TABLE `settings`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --

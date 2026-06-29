@@ -53,6 +53,8 @@ $socialLinks = $siteModel->getSocialLinks();
     <meta name="description" content="<?php echo $metaDescription; ?>" />
     <meta name="keywords"    content="<?php echo $metaKeywords; ?>" />
     <title><?php echo $metaTitle; ?></title>
+    <!-- Base tag to prevent broken assets under pretty subpath URLs -->
+    <base href="<?php echo Format::e(str_replace(basename($_SERVER['SCRIPT_NAME']), '', $_SERVER['SCRIPT_NAME'])); ?>">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -190,7 +192,7 @@ $socialLinks = $siteModel->getSocialLinks();
                         $navCats->data_seek(0);
                         while ($c = $navCats->fetch_assoc()): 
                     ?>
-                        <a href="cat_posts.php?cat_post=<?php echo (int) $c['id']; ?>" class="px-3.5 py-2 text-sm font-medium rounded-lg transition-all duration-150 text-slate-300 hover:bg-brand-500/20 hover:text-brand-300 mx-1.5 flex items-center gap-2 <?php echo (isset($_GET['cat_post']) && (int)$_GET['cat_post'] === (int)$c['id']) ? 'bg-brand-500/20 text-brand-300' : ''; ?>">
+                        <a href="category/<?php echo Format::e($c['slug']); ?>" class="px-3.5 py-2 text-sm font-medium rounded-lg transition-all duration-150 text-slate-300 hover:bg-brand-500/20 hover:text-brand-300 mx-1.5 flex items-center gap-2 <?php echo (isset($_GET['cat_post']) && ($_GET['cat_post'] == $c['slug'] || $_GET['cat_post'] == $c['id'])) ? 'bg-brand-500/20 text-brand-300' : ''; ?>">
                             <i class="fa-solid fa-folder text-[10px] text-brand-400"></i> <?php echo Format::e($c['name']); ?>
                         </a>
                     <?php endwhile; endif; ?>
