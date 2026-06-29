@@ -1,75 +1,67 @@
 <?php include '../admin/inc/header.php'; ?>
 <?php include '../admin/inc/sidebar.php'; ?>
+
 <?php 
-    if (!isset($_GET['msg_id']) || $_GET['msg_id'] == NULL) {
-        echo "<script>window.location = 'inbox.php';</script>";
-        #header("Location:catlist.php");
-    } else{
-        $id = $_GET['msg_id'];
-    }
- ?>
-<div class="grid_10">
-    <div class="box round first grid">
-        <h2>View Message</h2>
-        <div class="block">
-            <?php
-                if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-                     echo "<script>window.location = 'inbox.php';</script>";
-                }
-            ?>
-                <form action="" method="post">
-                    <?php
-                        $query ="SELECT * FROM contact WHERE id='$id'";
-                        $msg = $db->select($query);
-                        if ($msg) {
-                            $i=0;
-                            while ($result = $msg->fetch_assoc()) { 
-                               $i++;
-                               #print_r($result)
-                        ?>
-                    <table class="form">
-                        <tr>
-                            <td>
-                                <label>Name</label>
-                            </td>
-                            <td>
-                                <input type="text" readonly name="name" value="<?php echo $result['fname'].' '.$result['lname']; ?>" class="medium"/>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <label>Email</label>
-                            </td>
-                            <td>
-                                <input type="text" readonly name="email" value="<?php echo $result['email']; ?>" class="medium"/>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="vertical-align: top; padding-top: 9px;">
-                                <label>Content</label>
-                            </td>
-                            <td>
-                                <textarea readonly class="tinymce" name="msg"><?php echo $result['msg']; ?></textarea>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td>
-                                <input type="submit" name="submit" Value="Submit" />
-                            </td>
-                        </tr>
-                    </table>
-                     <?php } } ?>
-                </form>
+// Only admins (role = '0') can view inbox messages
+if (Session::get('userRole') !== '0') {
+    header('Location: index.php');
+    exit();
+}
+
+if (!isset($_GET['msg_id']) || (int) $_GET['msg_id'] <= 0) {
+    header('Location: inbox.php');
+    exit();
+}
+
+$id = (int) $_GET['msg_id'];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Location: inbox.php');
+    exit();
+}
+
+$result = $contactModel->getById($id);
+if (!$result) {
+    header('Location: inbox.php');
+    exit();
+}
+?>
+<div class="glass-card rounded-3xl p-6 sm:p-8 shadow-xl shadow-black/5 flex flex-col gap-6">
+    <div class="flex flex-col gap-1 border-b border-white/5 pb-4">
+        <h2 class="text-xl font-bold font-outfit text-white">View Message Details</h2>
+        <p class="text-slate-400 text-xs font-medium">Read user submitted form data</p>
+    </div>
+
+    <form action="" method="post" class="flex flex-col gap-5 max-w-xl">
+        <div class="flex flex-col gap-1.5">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-455">Sender Name</span>
+            <div class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 font-semibold">
+                <?php echo Format::e($result['fname'] . ' ' . $result['lname']); ?>
             </div>
         </div>
-    </div>
-    <script type="text/javascript">
-        $(document).ready(function () {
-            setupTinyMCE();
-            setDatePicker('date-picker');
-            $('input[type="checkbox"]').fancybutton();
-            $('input[type="radio"]').fancybutton();
-        });
-    </script>
-    <?php include '../admin/inc/footer.php'; ?>
+
+        <div class="flex flex-col gap-1.5">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-455">Sender Email Address</span>
+            <div class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200">
+                <?php echo Format::e($result['email']); ?>
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-455">Message Body</span>
+            <textarea readonly class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-655 focus:outline-none min-h-[160px]" rows="6"><?php echo Format::e($result['msg']); ?></textarea>
+        </div>
+
+        <div class="mt-2 flex gap-3">
+            <button type="submit" name="submit" 
+                    class="px-6 py-3 bg-brand-500 hover:bg-brand-600 active:bg-brand-700 text-white text-sm font-semibold rounded-xl transition-colors duration-200 cursor-pointer shadow-md shadow-brand-500/10">
+                Back to Inbox
+            </button>
+            <a href="reply_msg.php?msg_id=<?php echo $id; ?>" 
+               class="px-6 py-3 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 border border-blue-500/20 text-sm font-semibold rounded-xl transition-colors duration-200">
+                Reply Message
+            </a>
+        </div>
+    </form>
+</div>
+<?php include '../admin/inc/footer.php'; ?>

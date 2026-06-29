@@ -1,73 +1,151 @@
-<?php 
-	include '../lib/Session.php'; 
-	Session::checkLogin();
-?>
-<?php include '../config/config.php'; ?>
-<?php include '../lib/Database.php'; ?>
-<?php include '../helpers/Format.php'; ?>
 <?php
-    $db = new Database();
-    $fm = new Format();
-?> 
+require_once __DIR__ . '/../app/bootstrap.php';
+Session::checkLogin(); // Redirect logged-in users away from login page
+
+$error = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // CSRF Protection Check
+    $csrfToken = $_POST['csrf_token'] ?? '';
+    if (!Session::checkCsrfToken($csrfToken)) {
+        $error = 'Security check failed. Please refresh the page.';
+    } else {
+        $username = trim($_POST['username'] ?? '');
+        $password = trim($_POST['password'] ?? '');
+
+        if (empty($username) || empty($password)) {
+            $error = 'Username and password are required.';
+        } else {
+            $user = $userModel->getByUsername($username);
+
+            if ($user) {
+                $passwordValid = false;
+
+                if (password_verify($password, $user['password'])) {
+                    $passwordValid = true;
+                } elseif ($user['password'] === md5($password)) {
+                    // Legacy MD5 match — rehash to bcrypt automatically
+                    $newHash = password_hash($password, PASSWORD_BCRYPT);
+                    $userModel->updatePassword((int) $user['id'], $newHash);
+                    $passwordValid = true;
+                }
+
+                if ($passwordValid) {
+                    Session::set('login',    true);
+                    Session::set('userId',   $user['id']);
+                    Session::set('userRole', $user['role']);
+                    Session::set('userName', $user['username']);
+                    header('Location: index.php');
+                    exit();
+                } else {
+                    $error = 'Username or password is incorrect.';
+                }
+            } else {
+                $error = 'Username or password is incorrect.';
+            }
+        }
+    }
+}
+?>
 <!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950">
 <head>
-<meta charset="utf-8">
-<title>Login</title>
-    <link rel="stylesheet" type="text/css" href="css/stylelogin.css" media="screen" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — <?php echo TITLE; ?></title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+          integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2zippi1Mun+0cFqCavcor+Bq3UMKrJvF7KZIZeq3aEznMfGt01Ow=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- TailwindCSS v3 CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        outfit: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        red: {
+                            350: '#f87171'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-card {
+            background: rgba(30, 41, 59, 0.45);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #090d16;
+        }
+    </style>
 </head>
-<body>
-<div class="container">
-	<section id="content">
-		<?php 
-			if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-				$username = $fm->validation($_POST['username']);
-				$password = $fm->validation(md5($_POST['password']));
-				$role = $fm->validation($_POST['role']);
-				$username = mysqli_real_escape_string ($db->link, $username);
-				$password = mysqli_real_escape_string ($db->link, $password);
+<body class="h-full flex items-center justify-center p-4">
+<div class="w-full max-w-md">
+    <div class="glass-card rounded-3xl p-8 shadow-2xl shadow-black/40 flex flex-col gap-6">
+        
+        <!-- Header -->
+        <div class="text-center">
+            <h1 class="text-3xl font-extrabold font-outfit text-white tracking-tight">Welcome Back</h1>
+            <p class="text-slate-400 text-sm mt-1.5 font-medium">Log in to manage your blog panel</p>
+        </div>
 
-				$query  = "SELECT * FROM tbl_user WHERE username = '$username' AND password = '$password'";
+        <!-- Alert -->
+        <?php if ($error): ?>
+            <div class="bg-red-500/10 border border-red-500/20 text-red-350 px-4 py-3 rounded-xl text-xs flex items-center gap-2">
+                <i class="fa-solid fa-circle-exclamation shrink-0"></i>
+                <span><?php echo Format::e($error); ?></span>
+            </div>
+        <?php endif; ?>
 
-				$result = $db->select($query);
-				if ($result != false) {
-					#$value = mysqli_fetch_array($result);
-					$value = mysqli_fetch_assoc($result);
-					#print_r($value);
-					$row = mysqli_num_rows($result);
-						if ($row > 0 ) {
-							Session::set("login", true);
-							Session::set("userId", $value['id']);
-							Session::set("userRole", $value['role']);
-							Session::set("userName", $value['username']);
-							header("Location:index.php");
+        <!-- Form -->
+        <form action="" method="post" class="flex flex-col gap-5">
+            <!-- CSRF Token -->
+            <input type="hidden" name="csrf_token" value="<?php echo Session::getCsrfToken(); ?>">
 
-						}  else {
-								echo "<span style='error'>No result found..!!</span>";		
-						}
-				}
-				else{
-					echo "<span style='color:red; font-size:18px;'>Username or Password not match</span>";
-				}
-			}
-		?>
-		<form action="login.php" method="post">
-			<h1>Login</h1>
-			<div>
-				<input type="text" placeholder="Username" required="" name="username"/>
-			</div>
-			<div>
-				<input type="password" placeholder="Password" required="" name="password"/>
-			</div>
-			<div>
-				<input type="submit" name="login" value="Log in" />
-			</div>
-		</form><!-- form -->
+            <div class="flex flex-col gap-1">
+                <label for="username" class="text-xs font-semibold uppercase tracking-wider text-slate-400">Username</label>
+                <div class="relative flex items-center">
+                    <input type="text" id="username" name="username" placeholder="Enter username" required
+                           class="w-full bg-slate-900 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all duration-200" />
+                    <i class="fa-regular fa-user absolute left-4 text-slate-500 text-sm"></i>
+                </div>
+            </div>
 
-			<div class="button">
-				<a href="forget_pass.php">Forget password !!</a>
-			</div>
-		
-	</section><!-- content -->
-</div><!-- container -->
+            <div class="flex flex-col gap-1">
+                <label for="password" class="text-xs font-semibold uppercase tracking-wider text-slate-400">Password</label>
+                <div class="relative flex items-center">
+                    <input type="password" id="password" name="password" placeholder="Enter password" required
+                           class="w-full bg-slate-900 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all duration-200" />
+                    <i class="fa-solid fa-lock absolute left-4 text-slate-500 text-sm"></i>
+                </div>
+            </div>
+
+            <div class="mt-2">
+                <button type="submit" name="login" 
+                        class="w-full py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-semibold rounded-xl transition-colors duration-200 cursor-pointer shadow-lg shadow-blue-600/10">
+                    Sign In
+                </button>
+            </div>
+        </form>
+
+        <div class="text-center border-t border-white/5 pt-4">
+            <a href="forget_pass.php" class="text-xs text-slate-400 hover:text-white transition-colors duration-200">Forgot your password?</a>
+        </div>
+    </div>
+</div>
 </body>
 </html>

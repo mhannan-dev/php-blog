@@ -1,3 +1,14 @@
 RewriteEngine On
 RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /(.*)index\.php($|\ |\?)
 RewriteRule ^ /%1 [R=301,L]
+
+# Base URL path for subdirectory
+RewriteBase /php-blog/
+
+# Exclude existing files and directories from rewriting
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-l
+
+# Rewrite category/anything to cat_posts.php?cat_post=anything
+RewriteRule ^category/([^/]+)/?$ cat_posts.php?cat_post=$1 [QSA,L]

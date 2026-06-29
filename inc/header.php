@@ -1,119 +1,219 @@
-<?php include './config/config.php'; ?>
-<?php include './lib/Database.php'; ?>
-<?php include './helpers/Format.php'; ?>
-
+<?php require_once __DIR__ . '/../app/bootstrap.php'; ?>
 <?php
-header("Cache-Control: no-cache, must-revalidate");
-header("Pragma: no-cache");
-header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
-header("Cache-Control: max-age=2592000");
+// ─── Dynamic SEO meta ──────────────────────────────────────────────────────
+$metaTitle       = TITLE;
+$metaDescription = '';
+$metaKeywords    = '';
+
+$postIdMeta = (int) ($_GET['id']      ?? 0);
+$catIdMeta  = (int) ($_GET['cat_post'] ?? 0);
+$pageIdMeta = (int) ($_GET['page_id']  ?? 0);
+
+if ($postIdMeta > 0) {
+    $metaPost = $postModel->getById($postIdMeta);
+    if ($metaPost) {
+        $metaTitle       = Format::e($metaPost['title']) . ' — ' . TITLE;
+        $metaDescription = Format::e(mb_substr(strip_tags($metaPost['body']), 0, 160));
+        $metaKeywords    = Format::e($metaPost['tags']);
+    }
+} elseif ($catIdMeta > 0) {
+    $metaCat = $categoryModel->getById($catIdMeta);
+    if ($metaCat) {
+        $metaTitle = Format::e($metaCat['name']) . ' — ' . TITLE;
+    }
+} elseif ($pageIdMeta > 0) {
+    $metaPage = $pageModel->getById($pageIdMeta);
+    if ($metaPage) {
+        $metaTitle       = Format::e($metaPage['name']) . ' — ' . TITLE;
+        $metaDescription = Format::e(mb_substr(strip_tags($metaPage['body']), 0, 160));
+    }
+}
+
+// ─── Site info ─────────────────────────────────────────────────────────────
+$siteInfo   = $siteModel->getInfo();
+$siteLogo   = $siteInfo['logo']   ?? '';
+$siteTitle  = $siteInfo['title']  ?? TITLE;
+$siteSlogan = $siteInfo['slogan'] ?? '';
+
+// ─── Navigation pages ──────────────────────────────────────────────────────
+$navPages = $pageModel->getAll();
+
+// ─── Navigation categories ─────────────────────────────────────────────────
+$navCats = $categoryModel->getAll();
+
+// ─── Social links ──────────────────────────────────────────────────────────
+$socialLinks = $siteModel->getSocialLinks();
 ?>
-
-<?php
-$db = new Database();
-$fm = new Format();
-?>
-
-
-<html>
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
 <head>
-	
-		<?php include './scripts/meta.php'; ?>        
-		<!-- dynamic meta  keywords -->
-        <?php include './scripts/css.php'; ?>
-        <?php include './scripts/js.php'; ?>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="author"      content="<?php echo Format::e($siteTitle); ?>" />
+    <meta name="description" content="<?php echo $metaDescription; ?>" />
+    <meta name="keywords"    content="<?php echo $metaKeywords; ?>" />
+    <title><?php echo $metaTitle; ?></title>
+    <!-- Base tag to prevent broken assets under pretty subpath URLs -->
+    <base href="<?php echo Format::e(str_replace(basename($_SERVER['SCRIPT_NAME']), '', $_SERVER['SCRIPT_NAME'])); ?>">
 
-<script type="text/javascript">
-$(window).load(function() {
-	$('#slider').nivoSlider({
-		effect:'random',
-		slices:10,
-		animSpeed:500,
-		pauseTime:5000,
-		startSlide:0, //Set starting Slide (0 index)
-		directionNav:false,
-		directionNavHide:false, //Only show on hover
-		controlNav:false, //1,2,3...
-		controlNavThumbs:false, //Use thumbnails for Control Nav
-		pauseOnHover:true, //Stop animation while hovering
-		manualAdvance:false, //Force manual transitions
-		captionOpacity:0.8, //Universal caption opacity
-		beforeChange: function(){},
-		afterChange: function(){},
-		slideshowEnd: function(){} //Triggers after all slides have been shown
-	});
-});
-</script>
-</head>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-<body>
-	<div class="headersection templete clear">
-		<a href="#">
-        <?php
-$query = "SELECT * FROM site_info LIMIT 1";
-$post = $db->select($query);
-    //print_r($post); 
-if ($post) {
-    while ($result = $post->fetch_assoc()) {
-         //print_r($result);
-
-        ?>
-
-
-			<div class="logo">
-				<img src="admin/<?php echo $result['logo'] ?>" alt="Logo"/>
-                <h2><?php echo $result['title'] ?></h2>
-                <p><?php echo $result['slogan'] ?></p>
-
-            </div>
-    
-    <?php }
-    } ?>        
-		</a>
-		<div class="social clear">
-			<div class="icon clear">
-                <?php
-                    $query = "SELECT * FROM tbl_social ORDER BY id LIMIT 1";
-                    $s_link = $db->select($query);
-                    if ($s_link) {
-                        while ($result = $s_link->fetch_assoc()) {
-                            #print_r($result);
-                            ?>
-
-                            <a href="<?php echo $result['fb'] ?>" target="_blank"><i class="fa fa-facebook"></i></a>
-                            <a href="<?php echo $result['tw'] ?>" target="_blank"><i class="fa fa-github"></i></a>
-                            <a href="<?php echo $result['ln'] ?>" target="_blank"><i class="fa fa-linkedin"></i></a>
-                            
-                    <?php }
-                } ?>		
-			</div>
-			<div class="searchbtn clear">
-			        <form action="search.php" method="get">
-                        <input type="text" name="search" placeholder="Search..."/>
-                        <input type="submit" name="submit" value="Search"/>
-                    </form>
-			</div>
-		</div>
-	</div>
-    <div class="navsection templete">
-            <ul>
-                <li><a
-
-                <?php
-                if (isset($_GET['page_id']) && $_GET['page_id'] == $result['id']) {
-                    echo 'id="active"';
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+          integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2zippi1Mun+0cFqCavcor+Bq3UMKrJvF7KZIZeq3aEznMfGt01Ow=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+          
+    <!-- TailwindCSS v3 CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        outfit: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f4f6fe',
+                            100: '#e9edfd',
+                            200: '#cdd5fb',
+                            300: '#9faef8',
+                            400: '#697bf3',
+                            500: '#4353eb',
+                            600: '#2c37db',
+                            700: '#2329b3',
+                            800: '#202492',
+                            900: '#1d2274',
+                            950: '#111347',
+                        },
+                        red: {
+                            350: '#f87171'
+                        }
+                    }
                 }
-                ?>
-                        href="index.php">Home</a></li>
-<?php
-$query = "SELECT * from pages";
-$pages = $db->select($query);
-if ($pages) {
-    while ($result = $pages->fetch_assoc()) {
-        ?>
-            <li><a href="page.php?page_id=<?php echo $result['id'] ?>"><?php echo $result['name'] ?></a></li>
-    <?php }
-} ?>
-                <li><a href="contact_us.php">Contact</a></li>
-            </ul>
+            }
+        }
+    </script>
+    
+    <style type="text/css">
+        .glass {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.45);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #cdd5fb 0%, #697bf3 50%, #2c37db 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0b0f19;
+            color: #f1f5f9;
+        }
+        .group-hover-show {
+            opacity: 0;
+            transform: translateY(8px);
+            pointer-events: none;
+            transition: all 0.2s ease-in-out;
+        }
+        .group:hover .group-hover-show {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+            pointer-events: auto !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen selection:bg-brand-500 selection:text-white flex flex-col justify-between overflow-x-hidden">
+
+<!-- Header Top Social bar -->
+<div class="w-full bg-slate-950/80 backdrop-blur-md border-b border-white/5 py-2.5 px-4 text-sm z-50">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+        <p class="text-slate-400 font-medium text-center sm:text-left text-xs outfit tracking-wider uppercase"><?php echo Format::e($siteSlogan); ?></p>
+        <div class="flex items-center gap-4 text-slate-400">
+            <?php if ($socialLinks): ?>
+                <a href="<?php echo Format::e($socialLinks['fb']); ?>" target="_blank" class="hover:text-brand-400 transition-colors duration-200">
+                    <i class="fa-brands fa-facebook text-base"></i>
+                </a>
+                <a href="<?php echo Format::e($socialLinks['tw']); ?>" target="_blank" class="hover:text-brand-400 transition-colors duration-200">
+                    <i class="fa-brands fa-github text-base"></i>
+                </a>
+                <a href="<?php echo Format::e($socialLinks['ln']); ?>" target="_blank" class="hover:text-brand-400 transition-colors duration-200">
+                    <i class="fa-brands fa-linkedin text-base"></i>
+                </a>
+            <?php endif; ?>
         </div>
+    </div>
+</div>
+
+<!-- Main Sticky Nav -->
+<header class="sticky top-0 z-40 glass w-full shadow-lg shadow-black/20">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+        <!-- Logo and Site Name -->
+        <div class="flex items-center gap-3">
+            <a href="index.php" class="flex items-center gap-3 group">
+                <?php if ($siteLogo): ?>
+                    <img src="admin/<?php echo Format::e($siteLogo); ?>"
+                         alt="<?php echo Format::e($siteTitle); ?>"
+                         class="h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-105" />
+                <?php else: ?>
+                    <span class="text-2xl font-bold font-outfit text-white tracking-tight gradient-text"><?php echo Format::e($siteTitle); ?></span>
+                <?php endif; ?>
+            </a>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="flex flex-wrap items-center justify-center gap-1 sm:gap-2">
+            <a href="index.php" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-white/5 hover:text-white <?php echo basename($_SERVER['PHP_SELF']) === 'index.php' ? 'bg-brand-500/20 text-brand-300 border border-brand-500/30' : 'text-slate-300'; ?>">Home</a>
+            
+            <?php if ($navPages): while ($p = $navPages->fetch_assoc()): ?>
+                <a href="page.php?page_id=<?php echo (int) $p['id']; ?>" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-white/5 hover:text-white <?php echo (isset($_GET['page_id']) && (int)$_GET['page_id'] === (int)$p['id']) ? 'bg-brand-500/20 text-brand-300 border border-brand-500/30' : 'text-slate-300'; ?>">
+                    <?php echo Format::e($p['name']); ?>
+                </a>
+            <?php endwhile; endif; ?>
+
+            <div class="relative group">
+                <button type="button" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-white/5 hover:text-white <?php echo (basename($_SERVER['PHP_SELF']) === 'cat_posts.php') ? 'bg-brand-500/20 text-brand-300 border border-brand-500/30' : 'text-slate-300'; ?> focus:outline-none">
+                    Categories <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200 group-hover:rotate-180"></i>
+                </button>
+                <div class="absolute top-full left-0 mt-1.5 w-52 glass-card rounded-xl border border-white/10 shadow-xl py-1.5 flex flex-col z-50 group-hover-show">
+                    <?php if ($navCats): 
+                        $navCats->data_seek(0);
+                        while ($c = $navCats->fetch_assoc()): 
+                    ?>
+                        <a href="category/<?php echo Format::e($c['slug']); ?>" class="px-3.5 py-2 text-sm font-medium rounded-lg transition-all duration-150 text-slate-300 hover:bg-brand-500/20 hover:text-brand-300 mx-1.5 flex items-center gap-2 <?php echo (isset($_GET['cat_post']) && ($_GET['cat_post'] == $c['slug'] || $_GET['cat_post'] == $c['id'])) ? 'bg-brand-500/20 text-brand-300' : ''; ?>">
+                            <i class="fa-solid fa-folder text-[10px] text-brand-400"></i> <?php echo Format::e($c['name']); ?>
+                        </a>
+                    <?php endwhile; endif; ?>
+                </div>
+            </div>
+
+            <a href="contact_us.php" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-white/5 hover:text-white <?php echo basename($_SERVER['PHP_SELF']) === 'contact_us.php' ? 'bg-brand-500/20 text-brand-300 border border-brand-500/30' : 'text-slate-300'; ?>">Contact</a>
+        </nav>
+
+        <!-- Search Form -->
+        <form action="search.php" method="get" class="relative flex items-center w-full md:w-auto">
+            <input type="text" name="search"
+                   placeholder="Search articles..."
+                   value="<?php echo Format::e($_GET['search'] ?? ''); ?>"
+                   class="w-full md:w-60 bg-slate-900/80 border border-white/10 rounded-xl py-2 pl-4 pr-10 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all duration-250" />
+            <button type="submit" class="absolute right-3 text-slate-500 hover:text-white transition-colors duration-200">
+                <i class="fa-solid fa-magnifying-glass text-xs"></i>
+            </button>
+        </form>
+    </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 py-8 flex-grow w-full flex flex-col lg:flex-row gap-8">
+    <div class="flex-grow lg:w-3/4 flex flex-col gap-8">

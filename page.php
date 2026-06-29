@@ -1,35 +1,34 @@
-<?php include './inc/header.php'; ?>
 <?php
-if (!isset($_GET['page_id']) || $_GET['page_id'] == NULL) {
-    header("Location: 404.php"); 
+require_once __DIR__ . '/app/bootstrap.php';
+
+if (!isset($_GET['page_id']) || (int) $_GET['page_id'] <= 0) {
+    header('Location: index.php');
     exit();
-} else {
-    $page_id = $_GET['page_id'];
+}
+
+$pageId   = (int) $_GET['page_id'];
+$pageData = $pageModel->getById($pageId);
+
+if (!$pageData) {
+    header('Location: 404.php');
+    exit();
 }
 ?>
- <?php
-            $query = "SELECT * FROM pages WHERE id ='$page_id'";
 
-            $pages = $db->select($query);
-            if ($pages) {
+<?php include './inc/header.php'; ?>
 
-                while ($result = $pages->fetch_assoc()) {
+<article class="glass-card rounded-3xl p-6 sm:p-8 shadow-lg shadow-black/5">
+    <div class="flex flex-col gap-6">
+        <!-- Title Header -->
+        <h1 class="text-2xl sm:text-4xl font-extrabold font-outfit text-white leading-tight border-b border-white/5 pb-4">
+            <?php echo Format::e($pageData['name']); ?>
+        </h1>
 
-                    #print_r($result);
-                    ?>
+        <!-- Page body -->
+        <div class="text-slate-300 text-base leading-relaxed prose prose-invert max-w-none prose-headings:text-white prose-a:text-brand-400">
+            <?php echo $pageData['body']; ?>
+        </div>
+    </div>
+</article>
 
-<div class="contentsection contemplete clear">
-	<div class="maincontent clear">
-			<div class="about">
-				<h2><?php echo $result['name']; ?></h2>
-	
-				<p><?php echo $result['body']; ?></p>
-				
-				
-	        </div>
-
-	</div>
-	<?php include './inc/sidebar.php';?>	
-</div>
-<?php  } } else { header('Location:404.php');  } ?>
-<?php './inc/footer.php' ?>
+<?php include './inc/footer.php'; ?>

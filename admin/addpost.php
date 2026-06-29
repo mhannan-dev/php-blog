@@ -1,134 +1,146 @@
-﻿<?php include '../admin/inc/header.php'; ?>
+<?php include '../admin/inc/header.php'; ?>
 <?php include '../admin/inc/sidebar.php'; ?>
-<div class="grid_10">
 
-    <div class="box round first grid">
-        <h2>Add New Post</h2>
-        <div class="block">
-            <?php
-            if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-               
-                $title = mysqli_real_escape_string($db->link, $_POST['title']);
-                $body = mysqli_real_escape_string($db->link, $_POST['body']);
-                $cat = mysqli_real_escape_string($db->link, $_POST['cat']);
-                $author = mysqli_real_escape_string($db->link, $_POST['author']);
-                $tags = mysqli_real_escape_string($db->link, $_POST['tags']);
-                $userid = mysqli_real_escape_string($db->link, $_POST['userid']);
-            
-                // Image upload
-                $permited = array('jpg', 'jpeg', 'png', 'gif');
-                $file_name = $_FILES['image']['name'];
-                $file_size = $_FILES['image']['size'];
-                $file_temp = $_FILES['image']['tmp_name'];
-                $div = explode('.', $file_name);
-                $file_ext = strtolower(end($div));
-                $unique_image = substr(md5(time()), 0, 10) . '.' . $file_ext;
-                $uploaded_image = "upload/" . $unique_image;
-                //Image upload
-                if ($title == ""||$body == ""||$cat == ""||$author == ""||$file_name == ""||$tags == ""||$userid == "") {
-                    echo "<span class='error'>Field must not be empty</span>";
-                } elseif ($file_size > 1048567) {
-                    echo "<span class='error'>Image Size should be less then 1MB!
-                        </span>";
-                } elseif (in_array($file_ext, $permited) === false) {
-                    echo "<span class='error'>You can upload only:-"
-                    . implode(', ', $permited) . "</span>";
+<?php
+$error   = '';
+$success = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // CSRF Protection Check
+    $csrfToken = $_POST['csrf_token'] ?? '';
+    if (!Session::checkCsrfToken($csrfToken)) {
+        $error = 'Security check failed. Please refresh the page.';
+    } else {
+        $title  = trim($_POST['title']  ?? '');
+        $body   = trim($_POST['body']   ?? '');
+        $cat    = (int) ($_POST['cat']    ?? 0);
+        $author = trim($_POST['author'] ?? '');
+        $tags   = trim($_POST['tags']   ?? '');
+        $userId = (int) Session::get('userId');
+
+        // Image upload
+        $allowedExts  = ['jpg', 'jpeg', 'png', 'gif'];
+        $file         = $_FILES['image'] ?? null;
+        $fileName     = $file['name']     ?? '';
+        $fileSize     = $file['size']     ?? 0;
+        $fileTmp      = $file['tmp_name'] ?? '';
+        $fileExt      = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
+        if ($title === '' || $body === '' || $cat <= 0 || $author === '' || $fileName === '' || $tags === '') {
+            $error = 'All fields are required.';
+        } elseif ($fileSize > 1_048_576) {
+            $error = 'Image size must be less than 1 MB.';
+        } elseif (!in_array($fileExt, $allowedExts, true)) {
+            $error = 'Allowed image types: ' . implode(', ', $allowedExts) . '.';
+        } else {
+            $uniqueName   = bin2hex(random_bytes(8)) . '.' . $fileExt;
+            $uploadedPath = 'upload/' . $uniqueName;
+
+            if (!move_uploaded_file($fileTmp, $uploadedPath)) {
+                $error = 'Failed to upload image. Check folder permissions.';
+            } else {
+                $inserted = $postModel->create($title, $body, $cat, $author, $uploadedPath, $tags, $userId);
+
+                if ($inserted) {
+                    header('Location: post_list.php');
+                    exit();
                 } else {
-                    move_uploaded_file($file_temp, $uploaded_image);
-                    $query = "INSERT INTO tbl_post(title,body,cat,author,image,tags,userid) 
-                            VALUES('$title','$body','$cat','$author','$uploaded_image','$tags','$userid')";
-                    $inserted_rows = $db->insert($query);
-                    if ($inserted_rows) {
-                    
-                        echo "<script>window.location = 'post_list.php';</script>";
-                    } else {
-                        echo "<span class='error'>Post not inserted successfully.</span>";
-                    }
+                    $error = 'Failed to save the post. Please try again.';
                 }
             }
-                ?>
+        }
+    }
+}
+?>
 
-                <form action="" method="post" enctype="multipart/form-data">
-                    <table class="form">
-                        <tr>
-                            <td>
-                                <label>Title</label>
-                            </td>
-                            <td>
-                                <input type="text" name="title" placeholder="Enter Post Title..." class="medium"/>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <label>Author</label>
-                            </td>
-                            <td>
-                                <input type="text" value="<?php echo Session::get('userName');?>"  name="author" class="medium"/>
-                                <input type="hidden" value="<?php echo Session::get('userId');?>"  name="userid" class="medium"/>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <label>Category</label>
-                            </td>
-                            <td>
-                                <select id="select" name="cat">
-                                <?php
-                                $query = "SELECT * FROM tbl_category";
-                                $category = $db->select($query);
-                                if ($category) {
-                                    while ($result = $category->fetch_assoc()) {
-                                        ?>
-                                            <option value="<?php echo $result['id'] ?>"><?php echo $result['name'] ?></option>
-                                        <?php }
-                                    } ?>
-                                </select>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <label>SEO Related Tags</label>
-                            </td>
-                            <td>
-                                <input type="text" name="tags" placeholder="Enter tags" class="medium" />
-                            </td>
-                        </tr>
-                         <tr>
-                            <td style="vertical-align: top; padding-top: 9px;">
-                                <label>SEO Related Description</label>
-                            </td>
-                            <td>
-                                <textarea id="mytextarea2" class="tinymce" name="meta_desc"></textarea>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <label>Upload Image</label>
-                            </td>
-                            <td>
-                                <input  name="image" type="file"/>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="vertical-align: top; padding-top: 9px;">
-                                <label>Content</label>
-                            </td>
-                            <td>
-                                <textarea id="mytextarea" class="tinymce" name="body"></textarea>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td>
-                                <input type="submit" name="submit" Value="Save" />
-                            </td>
-                        </tr>
-                    </table>
-                </form>
+<div class="glass-card rounded-3xl p-6 sm:p-8 shadow-xl shadow-black/5 flex flex-col gap-6">
+    <div class="flex flex-col gap-1 border-b border-white/5 pb-4">
+        <h2 class="text-xl font-bold font-outfit text-white">Add New Post</h2>
+        <p class="text-slate-400 text-xs font-medium">Create a new blog article to publish</p>
+    </div>
+
+    <?php if ($error): ?>
+        <div class="bg-red-500/10 border border-red-500/20 text-red-350 px-4 py-3 rounded-xl text-sm flex items-center gap-2">
+            <i class="fa-solid fa-triangle-exclamation shrink-0"></i>
+            <span><?php echo Format::e($error); ?></span>
+        </div>
+    <?php endif; ?>
+
+    <form action="" method="post" enctype="multipart/form-data" class="flex flex-col gap-5">
+        <!-- CSRF Token -->
+        <input type="hidden" name="csrf_token" value="<?php echo Session::getCsrfToken(); ?>">
+
+        <!-- Row 1: Title & Author -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5">
+                <label for="post-title" class="text-xs font-semibold uppercase tracking-wider text-slate-400">Post Title</label>
+                <input type="text" id="post-title" name="title" placeholder="Enter post title..." 
+                       class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-655 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all duration-200"
+                       value="<?php echo isset($_POST['title']) ? Format::e($_POST['title']) : ''; ?>" required />
+            </div>
+            
+            <div class="flex flex-col gap-1.5">
+                <label for="post-author" class="text-xs font-semibold uppercase tracking-wider text-slate-400">Author Name</label>
+                <input type="text" id="post-author" name="author" 
+                       class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all duration-200"
+                       value="<?php echo Format::e(Session::get('userName')); ?>" required />
             </div>
         </div>
-    </div>
-  
 
+        <!-- Row 2: Category & Tags -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5">
+                <label for="post-cat" class="text-xs font-semibold uppercase tracking-wider text-slate-400">Category</label>
+                <select id="post-cat" name="cat" 
+                        class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all duration-200" required>
+                    <option value="">— Select Category —</option>
+                    <?php
+                    $categories = $categoryModel->getAll();
+                    if ($categories) {
+                        while ($category = $categories->fetch_assoc()) {
+                            $selected = (isset($_POST['cat']) && (int)$_POST['cat'] === (int)$category['id']) ? 'selected' : '';
+                            echo '<option value="' . (int) $category['id'] . '" ' . $selected . '>'
+                               . Format::e($category['name']) . '</option>';
+                        }
+                    }
+                    ?>
+                </select>
+            </div>
+            
+            <div class="flex flex-col gap-1.5">
+                <label for="post-tags" class="text-xs font-semibold uppercase tracking-wider text-slate-400">SEO Tags (comma-separated)</label>
+                <input type="text" id="post-tags" name="tags" placeholder="e.g. php, tutorials, design" 
+                       class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-655 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all duration-200"
+                       value="<?php echo isset($_POST['tags']) ? Format::e($_POST['tags']) : ''; ?>" required />
+            </div>
+        </div>
 
-    <?php include '../admin/inc/footer.php'; ?>
+        <!-- Row 3: Image Upload -->
+        <div class="flex flex-col gap-1.5">
+            <label for="post-image" class="text-xs font-semibold uppercase tracking-wider text-slate-400">Featured Image</label>
+            <div class="w-full bg-slate-900 border border-white/10 rounded-xl p-4 flex flex-col gap-2">
+                <input id="post-image" name="image" type="file" class="text-sm text-slate-400 cursor-pointer" required />
+                <span class="text-[11px] text-slate-500">Allowed formats: JPG, JPEG, PNG, GIF. Max size: 1 MB.</span>
+            </div>
+        </div>
+
+        <!-- Row 4: TinyMCE Editor -->
+        <div class="flex flex-col gap-1.5">
+            <label for="mytextarea" class="text-xs font-semibold uppercase tracking-wider text-slate-400">Article Content</label>
+            <textarea id="mytextarea" class="tinymce" name="body"><?php echo isset($_POST['body']) ? Format::e($_POST['body']) : ''; ?></textarea>
+        </div>
+
+        <div class="mt-2 flex gap-3">
+            <button type="submit" name="submit" 
+                    class="px-6 py-3 bg-brand-500 hover:bg-brand-600 active:bg-brand-700 text-white text-sm font-semibold rounded-xl transition-colors duration-200 cursor-pointer shadow-md shadow-brand-500/10">
+                Publish Post
+            </button>
+            <a href="post_list.php" 
+               class="px-6 py-3 border border-white/10 hover:bg-white/5 text-slate-350 hover:text-white text-sm font-semibold rounded-xl transition-colors duration-200">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<?php include '../admin/inc/footer.php'; ?>
