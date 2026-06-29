@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Site — all database operations for site configuration
+ * Setting — all database operations for site configuration
  * (site info, social links, footer, sliders).
  */
 class Setting
