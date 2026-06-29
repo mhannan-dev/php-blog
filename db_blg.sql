@@ -224,7 +224,7 @@ CREATE TABLE `users` (
 INSERT INTO `users` (`id`, `name`, `username`, `email`, `password`, `details`, `role`, `userid`) VALUES
 (1, 'Muhammad Hannan Ali', 'admin', 'mdhannan.info@gmail.com', '81dc9bdb52d04dc20036dbd8313ed055', '<p>MD. HANNAN ALI</p>', 0, 0),
 (8, 'Mr. Author', 'author', 'author@gmail.com', 'd5b7fb5a8edfeadce678a98282fbca57', '<p>Author bio</p>', 1, 0),
-(15, '', 'tuhin', 'tuhin@yahoo.com', '81dc9bdb52d04dc20036dbd8313ed055', '', 2, 0);
+(15, '', 'Tuhin', 'tuhin@yahoo.com', '81dc9bdb52d04dc20036dbd8313ed055', '', 2, 0);
 
 -- --------------------------------------------------------
 

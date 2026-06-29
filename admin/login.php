@@ -70,6 +70,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     fontFamily: {
                         sans: ['Plus Jakarta Sans', 'sans-serif'],
                         outfit: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        red: {
+                            350: '#f87171'
+                        }
                     }
                 }
             }

@@ -7,6 +7,8 @@
  */
 class Database
 {
+    private static ?Database $instance = null;
+
     private string $host;
     private string $user;
     private string $pass;
@@ -15,13 +17,28 @@ class Database
     /** @var mysqli */
     public mysqli $link;
 
-    public function __construct()
+    private function __construct()
     {
         $this->host   = DB_HOST;
         $this->user   = DB_USER;
         $this->pass   = DB_PASS;
         $this->dbname = DB_NAME;
         $this->connectDB();
+    }
+
+    public static function getInstance(): Database
+    {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
+    private function __clone() {}
+
+    public function __wakeup()
+    {
+        throw new \Exception("Cannot unserialize a singleton.");
     }
 
     private function connectDB(): void

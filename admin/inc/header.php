@@ -28,6 +28,11 @@ Session::checkSession();
                     fontFamily: {
                         sans: ['Plus Jakarta Sans', 'sans-serif'],
                         outfit: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        red: {
+                            350: '#f87171'
+                        }
                     }
                 }
             }

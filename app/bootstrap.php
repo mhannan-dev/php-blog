@@ -8,6 +8,13 @@
  * autoloads all classes, starts the session, and provides model instances.
  */
 
+// ─── Autoloader & Environment ──────────────────────────────────────────────
+if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+    require_once __DIR__ . '/../vendor/autoload.php';
+    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
+    $dotenv->safeLoad();
+}
+
 // ─── Core ──────────────────────────────────────────────────────────────────
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/Core/Database.php';
@@ -25,7 +32,7 @@ require_once __DIR__ . '/Models/Site.php';
 // ─── Bootstrap ─────────────────────────────────────────────────────────────
 Session::init();
 
-$db = new Database();
+$db = Database::getInstance();
 
 // ─── Model Instances ───────────────────────────────────────────────────────
 // Available to every page as $post, $category, etc.

@@ -87,6 +87,9 @@ $socialLinks = $siteModel->getSocialLinks();
                             800: '#202492',
                             900: '#1d2274',
                             950: '#111347',
+                        },
+                        red: {
+                            350: '#f87171'
                         }
                     }
                 }
@@ -116,6 +119,17 @@ $socialLinks = $siteModel->getSocialLinks();
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: #0b0f19;
             color: #f1f5f9;
+        }
+        .group-hover-show {
+            opacity: 0;
+            transform: translateY(8px);
+            pointer-events: none;
+            transition: all 0.2s ease-in-out;
+        }
+        .group:hover .group-hover-show {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+            pointer-events: auto !important;
         }
     </style>
 </head>
@@ -167,11 +181,21 @@ $socialLinks = $siteModel->getSocialLinks();
                 </a>
             <?php endwhile; endif; ?>
 
-            <?php if ($navCats): while ($c = $navCats->fetch_assoc()): ?>
-                <a href="cat_posts.php?cat_post=<?php echo (int) $c['id']; ?>" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-white/5 hover:text-white <?php echo (isset($_GET['cat_post']) && (int)$_GET['cat_post'] === (int)$c['id']) ? 'bg-brand-500/20 text-brand-300 border border-brand-500/30' : 'text-slate-300'; ?>">
-                    <?php echo Format::e($c['name']); ?>
-                </a>
-            <?php endwhile; endif; ?>
+            <div class="relative group">
+                <button type="button" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-white/5 hover:text-white <?php echo (basename($_SERVER['PHP_SELF']) === 'cat_posts.php') ? 'bg-brand-500/20 text-brand-300 border border-brand-500/30' : 'text-slate-300'; ?> focus:outline-none">
+                    Categories <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200 group-hover:rotate-180"></i>
+                </button>
+                <div class="absolute top-full left-0 mt-1.5 w-52 glass-card rounded-xl border border-white/10 shadow-xl py-1.5 flex flex-col z-50 group-hover-show">
+                    <?php if ($navCats): 
+                        $navCats->data_seek(0);
+                        while ($c = $navCats->fetch_assoc()): 
+                    ?>
+                        <a href="cat_posts.php?cat_post=<?php echo (int) $c['id']; ?>" class="px-3.5 py-2 text-sm font-medium rounded-lg transition-all duration-150 text-slate-300 hover:bg-brand-500/20 hover:text-brand-300 mx-1.5 flex items-center gap-2 <?php echo (isset($_GET['cat_post']) && (int)$_GET['cat_post'] === (int)$c['id']) ? 'bg-brand-500/20 text-brand-300' : ''; ?>">
+                            <i class="fa-solid fa-folder text-[10px] text-brand-400"></i> <?php echo Format::e($c['name']); ?>
+                        </a>
+                    <?php endwhile; endif; ?>
+                </div>
+            </div>
 
             <a href="contact_us.php" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-white/5 hover:text-white <?php echo basename($_SERVER['PHP_SELF']) === 'contact_us.php' ? 'bg-brand-500/20 text-brand-300 border border-brand-500/30' : 'text-slate-300'; ?>">Contact</a>
         </nav>
