@@ -1,4 +1,6 @@
 {% extends 'dashboard/base.twig' %}
+{% import 'dashboard/components/button.twig' as btn %}
+{% import 'dashboard/components/input.twig' as form %}
 
 {% block content %}
 <div class="glass-card rounded-3xl p-6 sm:p-8 shadow-xl shadow-black/5 flex flex-col gap-6">
@@ -24,42 +26,14 @@
         <!-- CSRF Token -->
         <input type="hidden" name="csrf_token" value="{{ csrfToken }}">
 
-        <div class="flex flex-col gap-1.5">
-            <label for="prof-name" class="text-xs font-semibold uppercase tracking-wider text-slate-400">Full Name</label>
-            <input type="text" id="prof-name" name="name" 
-                   class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all duration-200"
-                   value="{{ user.name }}" required />
-        </div>
-        
-        <div class="flex flex-col gap-1.5">
-            <label for="prof-username" class="text-xs font-semibold uppercase tracking-wider text-slate-400">Username</label>
-            <input type="text" id="prof-username" name="username" 
-                   class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all duration-200"
-                   value="{{ user.username }}" required />
-        </div>
-
-        <div class="flex flex-col gap-1.5">
-            <label for="prof-email" class="text-xs font-semibold uppercase tracking-wider text-slate-400">Email Address</label>
-            <input type="email" id="prof-email" name="email" 
-                   class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all duration-200"
-                   value="{{ user.email }}" required />
-        </div>
-
-        <div class="flex flex-col gap-1.5">
-            <label for="prof-details" class="text-xs font-semibold uppercase tracking-wider text-slate-400">Bio Details</label>
-            <textarea id="prof-details" name="details" rows="4" 
-                      class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all duration-200">{{ user.details }}</textarea>
-        </div>
+        {{ form.text('name', 'Full Name', user.name, '', true, 'text', 'prof-name') }}
+        {{ form.text('username', 'Username', user.username, '', true, 'text', 'prof-username') }}
+        {{ form.text('email', 'Email Address', user.email, '', true, 'email', 'prof-email') }}
+        {{ form.textarea('details', 'Bio Details', user.details, 'rows-4', false, 'prof-details') }}
 
         <div class="mt-2 flex gap-3">
-            <button type="submit" name="submit" 
-                    class="px-6 py-3 bg-brand-500 hover:bg-brand-600 active:bg-brand-700 text-white text-sm font-semibold rounded-xl transition-colors duration-200 cursor-pointer shadow-md shadow-brand-500/10">
-                Update Profile
-            </button>
-            <a href="index.php" 
-               class="px-6 py-3 border border-white/10 hover:bg-white/5 text-slate-350 hover:text-white text-sm font-semibold rounded-xl transition-colors duration-200">
-                Cancel
-            </a>
+            {{ btn.primary('Update Profile', 'submit', 'submit', 'fa-solid fa-user-check') }}
+            {{ btn.link('Cancel', 'index.php') }}
         </div>
     </form>
 </div>

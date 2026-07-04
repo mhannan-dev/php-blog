@@ -1,0 +1,42 @@
+{# 
+    Reusable Button Components for Admin Dashboard
+    Usage:
+    {% import 'dashboard/components/button.twig' as btn %}
+    
+    {{ btn.primary('Save Changes', 'submit', 'submit', 'fa-solid fa-check') }}
+    {{ btn.secondary('Cancel', 'button') }}
+    {{ btn.danger('Delete', 'submit', 'delete') }}
+    {{ btn.link('Back', 'index.php') }}
+#}
+
+{% macro primary(text, type='submit', name='submit', icon='') %}
+    <button type="{{ type }}" name="{{ name }}" 
+            class="px-6 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-semibold rounded-xl transition-colors duration-200 cursor-pointer shadow-md shadow-blue-600/20 flex items-center gap-2 justify-center whitespace-nowrap w-fit">
+        {% if icon %}<i class="{{ icon }}"></i>{% endif %}
+        <span>{{ text }}</span>
+    </button>
+{% endmacro %}
+
+{% macro secondary(text, type='button', name='', icon='') %}
+    <button type="{{ type }}" name="{{ name }}" 
+            class="px-6 py-3 border border-white/10 bg-white/5 hover:bg-white/10 active:bg-white/15 text-slate-300 hover:text-white text-sm font-semibold rounded-xl transition-colors duration-200 cursor-pointer flex items-center gap-2 justify-center whitespace-nowrap w-fit">
+        {% if icon %}<i class="{{ icon }}"></i>{% endif %}
+        <span>{{ text }}</span>
+    </button>
+{% endmacro %}
+
+{% macro danger(text, type='button', name='', icon='') %}
+    <button type="{{ type }}" name="{{ name }}" 
+            class="px-6 py-3 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 active:bg-red-500/30 text-red-400 hover:text-red-300 text-sm font-semibold rounded-xl transition-colors duration-200 cursor-pointer flex items-center gap-2 justify-center whitespace-nowrap w-fit">
+        {% if icon %}<i class="{{ icon }}"></i>{% endif %}
+        <span>{{ text }}</span>
+    </button>
+{% endmacro %}
+
+{% macro link(text, url, icon='') %}
+    <a href="{{ url }}" 
+       class="px-6 py-3 border border-white/10 bg-white/5 hover:bg-white/10 active:bg-white/15 text-slate-300 hover:text-white text-sm font-semibold rounded-xl transition-colors duration-200 cursor-pointer flex items-center gap-2 justify-center whitespace-nowrap w-fit inline-flex">
+        {% if icon %}<i class="{{ icon }}"></i>{% endif %}
+        <span>{{ text }}</span>
+    </a>
+{% endmacro %}

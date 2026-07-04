@@ -64,6 +64,20 @@ class Database
     }
 
     /**
+     * Prepare a SQL statement for execution.
+     * Returns a mysqli_stmt object or false on failure.
+     */
+    public function prepare(string $query): \mysqli_stmt|false
+    {
+        $stmt = $this->link->prepare($query);
+        if ($stmt === false) {
+            error_log('DB prepare error: ' . $this->link->error . ' | Query: ' . $query);
+            return false;
+        }
+        return $stmt;
+    }
+
+    /**
      * Execute a SELECT query and return the result set, or false if no rows.
      */
     public function select(string $query): mysqli_result|false

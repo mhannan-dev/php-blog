@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
-          integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2zippi1Mun+0cFqCavcor+Bq3UMKrJvF7KZIZeq3aEznMfGt01Ow=="
+          integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
           crossorigin="anonymous" referrerpolicy="no-referrer" />
     <!-- TailwindCSS v3 CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -25,6 +25,12 @@
                     colors: {
                         red: {
                             350: '#f87171'
+                        },
+                        brand: {
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
                         }
                     }
                 }
@@ -80,8 +86,11 @@
                 <label for="password" class="text-xs font-semibold uppercase tracking-wider text-slate-400">Password</label>
                 <div class="relative flex items-center">
                     <input type="password" id="password" name="password" placeholder="Enter password" required
-                           class="w-full bg-slate-900 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all duration-200" />
+                           class="w-full bg-slate-900 border border-white/10 rounded-xl py-3 pl-11 pr-10 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all duration-200" />
                     <i class="fa-solid fa-lock absolute left-4 text-slate-500 text-sm"></i>
+                    <button type="button" id="togglePassword" tabindex="-1" class="absolute right-4 text-slate-500 hover:text-slate-300 focus:outline-none cursor-pointer transition-colors duration-200">
+                        <i class="fa-regular fa-eye text-sm" id="toggleIcon"></i>
+                    </button>
                 </div>
             </div>
 
@@ -98,5 +107,17 @@
         </div>
     </div>
 </div>
+<script>
+    const togglePassword = document.querySelector('#togglePassword');
+    const password = document.querySelector('#password');
+    const toggleIcon = document.querySelector('#toggleIcon');
+
+    togglePassword.addEventListener('click', function (e) {
+        const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+        password.setAttribute('type', type);
+        toggleIcon.classList.toggle('fa-eye');
+        toggleIcon.classList.toggle('fa-eye-slash');
+    });
+</script>
 </body>
 </html>

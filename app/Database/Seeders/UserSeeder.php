@@ -20,7 +20,7 @@ class UserSeeder implements SeederInterface
                 name:     'Muhammad Hannan Ali',
                 username: 'admin',
                 email:    'mdhannan.info@gmail.com',
-                password: md5('Test@1234'),
+                password: password_hash('Test@1234', PASSWORD_BCRYPT),
                 details:  '<p>MD. HANNAN ALI</p>',
                 role:     0,
                 userid:   0
@@ -29,7 +29,7 @@ class UserSeeder implements SeederInterface
                 name:     'Mr. Author',
                 username: 'author',
                 email:    'author@example.com',
-                password: md5('Test@1234'),
+                password: password_hash('Test@1234', PASSWORD_BCRYPT),
                 details:  '<p>Author bio</p>',
                 role:     1,
                 userid:   0
@@ -38,7 +38,7 @@ class UserSeeder implements SeederInterface
                 name:     'Tuhin',
                 username: 'tuhin',
                 email:    'tuhin@example.com',
-                password: md5('Test@1234'),
+                password: password_hash('Test@1234', PASSWORD_BCRYPT),
                 details:  '',
                 role:     2,
                 userid:   0

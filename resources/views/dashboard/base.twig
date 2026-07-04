@@ -12,7 +12,7 @@
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
-          integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2zippi1Mun+0cFqCavcor+Bq3UMKrJvF7KZIZeq3aEznMfGt01Ow=="
+          integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
           crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <!-- TailwindCSS v3 CDN -->
@@ -28,6 +28,12 @@
                     colors: {
                         red: {
                             350: '#f87171'
+                        },
+                        brand: {
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
                         }
                     }
                 }
@@ -44,7 +50,10 @@
     <script src="js/jquery-ui/jquery.effects.slide.min.js" type="text/javascript"></script>
     <script src="js/jquery-ui/jquery.ui.mouse.min.js"     type="text/javascript"></script>
     <script src="js/jquery-ui/jquery.ui.sortable.min.js"  type="text/javascript"></script>
-    <script src="https://cdn.tiny.cloud/1/lxciupl9njkl5ls3keg2ggdfrdqvc65znxc65h791rsrs9g1/tinymce/5/tinymce.min.js"></script>
+    
+    <!-- Jodit Text Editor (MIT Licensed, Open Source) -->
+    <link rel="stylesheet" href="https://unpkg.com/jodit@3.24.2/build/jodit.min.css"/>
+    <script src="https://unpkg.com/jodit@3.24.2/build/jodit.min.js"></script>
     
     <style type="text/css">
         .glass-card {
@@ -77,12 +86,16 @@
     
     <script type="text/javascript">
     $(document).ready(function () {
-        // Init TinyMCE
-        tinymce.init({ 
-            selector: '.tinymce',
-            theme: 'silver',
-            skin: 'oxide-dark',
-            content_css: 'dark'
+        // Init Jodit Editor
+        const editors = document.querySelectorAll('.tinymce');
+        editors.forEach(editor => {
+            Jodit.make(editor, {
+                theme: 'dark',
+                height: 400,
+                showCharsCounter: false,
+                showWordsCounter: false,
+                showXPathInStatusbar: false
+            });
         });
     });
     </script>
@@ -92,8 +105,11 @@
 <!-- Top Admin Header Bar -->
 <header class="w-full bg-slate-950 border-b border-white/5 py-4 px-6 sticky top-0 z-30 shadow-md">
     <div class="max-w-8xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-        <!-- Logo / Branding -->
+        <!-- Logo / Branding & Toggle -->
         <div class="flex items-center gap-3">
+            <button type="button" id="sidebar-toggle" class="text-slate-400 hover:text-white transition-colors p-2 focus:outline-none hidden md:block">
+                <i class="fa-solid fa-bars text-lg"></i>
+            </button>
             <div class="h-9 w-9 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-blue-600/20 shrink-0">
                 <i class="fa-solid fa-cube text-base"></i>
             </div>
@@ -123,14 +139,17 @@
 <div class="w-full flex-grow max-w-8xl mx-auto flex flex-col md:flex-row gap-6 p-6">
     
     <!-- Sidebar Left Column -->
-    <aside class="w-full md:w-1/4 shrink-0 flex flex-col gap-6">
+    <aside id="main-sidebar" class="w-full md:w-[15%] shrink-0 flex flex-col gap-6 transition-all duration-300">
 
         <!-- Admin Operations Menu -->
         <div class="glass-card rounded-2xl p-5 shadow-lg shadow-black/10 flex flex-col gap-5">
             
-            <!-- Section: Content Manager -->
-            <div>
-                <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 font-sans px-2">Content Options</h4>
+            <!-- Section: Posts -->
+            <div class="sidebar-section">
+                <button type="button" class="w-full flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 font-sans px-2 focus:outline-none toggle-menu transition-colors hover:text-slate-300">
+                    <span>Posts</span>
+                    <i class="fa-solid fa-chevron-down transition-transform duration-200"></i>
+                </button>
                 <ul class="flex flex-col gap-1 text-sm font-medium">
                     <li>
                         <a href="addpost.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl {{ current_page == 'addpost.php' ? 'text-white bg-white/10' : 'text-slate-350 hover:text-white hover:bg-white/5' }} transition-all duration-200">
@@ -142,6 +161,16 @@
                             <i class="fa-solid fa-file-invoice text-brand-400 text-xs"></i> Post List
                         </a>
                     </li>
+                </ul>
+            </div>
+
+            <!-- Section: Categories -->
+            <div class="sidebar-section">
+                <button type="button" class="w-full flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 font-sans px-2 focus:outline-none toggle-menu transition-colors hover:text-slate-300">
+                    <span>Categories</span>
+                    <i class="fa-solid fa-chevron-down transition-transform duration-200"></i>
+                </button>
+                <ul class="flex flex-col gap-1 text-sm font-medium">
                     <li>
                         <a href="addcat.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl {{ current_page == 'addcat.php' ? 'text-white bg-white/10' : 'text-slate-350 hover:text-white hover:bg-white/5' }} transition-all duration-200">
                             <i class="fa-solid fa-folder-plus text-brand-400 text-xs"></i> Add Category
@@ -155,53 +184,12 @@
                 </ul>
             </div>
 
-            <!-- Section: Configuration Manager (Admins Only) -->
-            {% if admin_role == '0' %}
-            <div>
-                <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 font-sans px-2">Site Settings</h4>
-                <ul class="flex flex-col gap-1 text-sm font-medium">
-                    <li>
-                        <a href="titleslogan.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-350 hover:text-white hover:bg-white/5 transition-all duration-200">
-                            <i class="fa-solid fa-heading text-brand-400 text-xs"></i> Title & Logo
-                        </a>
-                    </li>
-                    <li>
-                        <a href="site_info_list.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-350 hover:text-white hover:bg-white/5 transition-all duration-200">
-                            <i class="fa-solid fa-circle-info text-brand-400 text-xs"></i> Site Info List
-                        </a>
-                    </li>
-                    <li>
-                        <a href="social_add.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-350 hover:text-white hover:bg-white/5 transition-all duration-200">
-                            <i class="fa-solid fa-share-nodes text-brand-400 text-xs"></i> Add Social Link
-                        </a>
-                    </li>
-                    <li>
-                        <a href="social_list.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-350 hover:text-white hover:bg-white/5 transition-all duration-200">
-                            <i class="fa-solid fa-globe text-brand-400 text-xs"></i> Social Media List
-                        </a>
-                    </li>
-                    <li>
-                        <a href="add_slider.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-350 hover:text-white hover:bg-white/5 transition-all duration-200">
-                            <i class="fa-solid fa-image text-brand-400 text-xs"></i> New Slider
-                        </a>
-                    </li>
-                    <li>
-                        <a href="slider_list.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-350 hover:text-white hover:bg-white/5 transition-all duration-200">
-                            <i class="fa-solid fa-images text-brand-400 text-xs"></i> Slider List
-                        </a>
-                    </li>
-                    <li>
-                        <a href="copyright.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-350 hover:text-white hover:bg-white/5 transition-all duration-200">
-                            <i class="fa-regular fa-copyright text-brand-400 text-xs"></i> Copyright Note
-                        </a>
-                    </li>
-                </ul>
-            </div>
-            {% endif %}
-
-            <!-- Section: Pages Manager -->
-            <div>
-                <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 font-sans px-2">Dynamic Pages</h4>
+            <!-- Section: Pages -->
+            <div class="sidebar-section">
+                <button type="button" class="w-full flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 font-sans px-2 focus:outline-none toggle-menu transition-colors hover:text-slate-300">
+                    <span>Pages</span>
+                    <i class="fa-solid fa-chevron-down transition-transform duration-200"></i>
+                </button>
                 <ul class="flex flex-col gap-1 text-sm font-medium">
                     {% if admin_role == '0' %}
                         <li>
@@ -220,10 +208,82 @@
                 </ul>
             </div>
 
-            <!-- Section: User Account Management -->
-            <div>
-                <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 font-sans px-2">Account Options</h4>
-                <ul class="flex flex-col gap-1 text-sm font-medium">
+            <!-- Admin Only Sections -->
+            {% if admin_role == '0' %}
+            
+            <!-- Section: Sliders -->
+            <div class="sidebar-section">
+                <button type="button" class="w-full flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 font-sans px-2 focus:outline-none toggle-menu transition-colors hover:text-slate-300">
+                    <span>Sliders</span>
+                    <i class="fa-solid fa-chevron-down transition-transform duration-200"></i>
+                </button>
+                <ul class="flex flex-col gap-1 text-sm font-medium hidden">
+                    <li>
+                        <a href="add_slider.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-350 hover:text-white hover:bg-white/5 transition-all duration-200">
+                            <i class="fa-solid fa-image text-brand-400 text-xs"></i> New Slider
+                        </a>
+                    </li>
+                    <li>
+                        <a href="slider_list.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-350 hover:text-white hover:bg-white/5 transition-all duration-200">
+                            <i class="fa-solid fa-images text-brand-400 text-xs"></i> Slider List
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Section: Socials -->
+            <div class="sidebar-section">
+                <button type="button" class="w-full flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 font-sans px-2 focus:outline-none toggle-menu transition-colors hover:text-slate-300">
+                    <span>Socials</span>
+                    <i class="fa-solid fa-chevron-down transition-transform duration-200"></i>
+                </button>
+                <ul class="flex flex-col gap-1 text-sm font-medium hidden">
+                    <li>
+                        <a href="social_add.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-350 hover:text-white hover:bg-white/5 transition-all duration-200">
+                            <i class="fa-solid fa-share-nodes text-brand-400 text-xs"></i> Add Social Link
+                        </a>
+                    </li>
+                    <li>
+                        <a href="social_list.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-350 hover:text-white hover:bg-white/5 transition-all duration-200">
+                            <i class="fa-solid fa-globe text-brand-400 text-xs"></i> Social Media List
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Section: Site Settings -->
+            <div class="sidebar-section">
+                <button type="button" class="w-full flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 font-sans px-2 focus:outline-none toggle-menu transition-colors hover:text-slate-300">
+                    <span>Site Settings</span>
+                    <i class="fa-solid fa-chevron-down transition-transform duration-200"></i>
+                </button>
+                <ul class="flex flex-col gap-1 text-sm font-medium hidden">
+                    <li>
+                        <a href="titleslogan.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-350 hover:text-white hover:bg-white/5 transition-all duration-200">
+                            <i class="fa-solid fa-heading text-brand-400 text-xs"></i> Title & Logo
+                        </a>
+                    </li>
+                    <li>
+                        <a href="site_info_list.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-350 hover:text-white hover:bg-white/5 transition-all duration-200">
+                            <i class="fa-solid fa-circle-info text-brand-400 text-xs"></i> Site Info List
+                        </a>
+                    </li>
+                    <li>
+                        <a href="copyright.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-350 hover:text-white hover:bg-white/5 transition-all duration-200">
+                            <i class="fa-regular fa-copyright text-brand-400 text-xs"></i> Copyright Note
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- Section: Users / Account -->
+            <div class="sidebar-section">
+                <button type="button" class="w-full flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 font-sans px-2 focus:outline-none toggle-menu transition-colors hover:text-slate-300">
+                    <span>Account Profile</span>
+                    <i class="fa-solid fa-chevron-down transition-transform duration-200"></i>
+                </button>
+                <ul class="flex flex-col gap-1 text-sm font-medium hidden">
                     <li>
                         <a href="profile.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-350 hover:text-white hover:bg-white/5 transition-all duration-200">
                             <i class="fa-regular fa-user text-brand-400 text-xs"></i> Edit Profile
@@ -241,7 +301,7 @@
     </aside>
     
     <!-- Content Area Right Column -->
-    <div class="flex-grow md:w-3/4 flex flex-col gap-6">
+    <div id="main-content" class="flex-grow md:w-[85%] flex flex-col gap-6 transition-all duration-300 min-w-0">
         {% block content %}{% endblock %}
     </div><!-- .flex-grow -->
 </div><!-- .w-full -->
@@ -257,4 +317,39 @@
 </footer>
 
 </body>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        // Dropdown Menu Toggles
+        const toggles = document.querySelectorAll('.toggle-menu');
+        toggles.forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const list = toggle.nextElementSibling;
+                const icon = toggle.querySelector('i');
+                list.classList.toggle('hidden');
+                icon.classList.toggle('rotate-180');
+            });
+        });
+
+        // Global Sidebar Toggle
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebar = document.getElementById('main-sidebar');
+        const mainContent = document.getElementById('main-content');
+        
+        if (sidebarToggle && sidebar && mainContent) {
+            sidebarToggle.addEventListener('click', () => {
+                if (sidebar.classList.contains('md:w-[15%]')) {
+                    sidebar.classList.remove('md:w-[15%]', 'w-full');
+                    sidebar.classList.add('hidden');
+                    mainContent.classList.remove('md:w-[85%]');
+                    mainContent.classList.add('w-full');
+                } else {
+                    sidebar.classList.remove('hidden');
+                    sidebar.classList.add('md:w-[15%]', 'w-full');
+                    mainContent.classList.remove('w-full');
+                    mainContent.classList.add('md:w-[85%]');
+                }
+            });
+        }
+    });
+</script>
 </html>

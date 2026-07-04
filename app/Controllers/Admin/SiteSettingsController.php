@@ -53,7 +53,7 @@ class SiteSettingsController extends BaseController
                             if (!move_uploaded_file($fileTmp, __DIR__ . '/../../../admin/' . $uploadedPath)) {
                                 $error = 'Failed to upload logo.';
                             } else {
-                                $updated = $this->siteModel->updateTitleSlogan(1, $title, $slogan, $uploadedPath);
+                                $updated = $this->siteModel->updateSiteInfo(1, $title, $slogan, $uploadedPath);
                                 if ($updated) {
                                     $success = 'Data updated successfully.';
                                 } else {
@@ -62,7 +62,7 @@ class SiteSettingsController extends BaseController
                             }
                         }
                     } else {
-                        $updated = $this->siteModel->updateTitleSlogan(1, $title, $slogan, '');
+                        $updated = $this->siteModel->updateSiteInfo(1, $title, $slogan, null);
                         if ($updated) {
                             $success = 'Data updated successfully.';
                         } else {
@@ -73,7 +73,7 @@ class SiteSettingsController extends BaseController
             }
         }
 
-        $sloganData = current($this->siteModel->getTitleSlogan() ?? []) ?: false;
+        $sloganData = $this->siteModel->getInfo() ?: false;
 
         $this->render('dashboard/titleslogan.twig', [
             'error'      => $error,
@@ -110,7 +110,7 @@ class SiteSettingsController extends BaseController
             }
         }
 
-        $copyrightData = current($this->siteModel->getFooter() ?? []) ?: false;
+        $copyrightData = $this->siteModel->getFooterNote() ?: false;
 
         $this->render('dashboard/copyright.twig', [
             'error'         => $error,

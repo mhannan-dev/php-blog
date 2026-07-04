@@ -109,7 +109,8 @@ class PageController extends BaseController
                 if ($name === '' || $body === '') {
                     $error = 'Fields must not be empty.';
                 } else {
-                    $updated = $this->pageModel->update($pageId, $name, $body);
+                    $slug = Format::slugify($name);
+                    $updated = $this->pageModel->update($pageId, $name, $slug, $body);
                     if ($updated) {
                         $success = 'Page Updated Successfully.';
                     } else {
