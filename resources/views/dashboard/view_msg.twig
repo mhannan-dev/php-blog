@@ -1,0 +1,42 @@
+{% extends 'dashboard/base.twig' %}
+
+{% block content %}
+<div class="glass-card rounded-3xl p-6 sm:p-8 shadow-xl shadow-black/5 flex flex-col gap-6">
+    <div class="flex flex-col gap-1 border-b border-white/5 pb-4">
+        <h2 class="text-xl font-bold font-outfit text-white">View Message Details</h2>
+        <p class="text-slate-400 text-xs font-medium">Read user submitted form data</p>
+    </div>
+
+    <form action="" method="post" class="flex flex-col gap-5 max-w-xl">
+        <div class="flex flex-col gap-1.5">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-455">Sender Name</span>
+            <div class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 font-semibold">
+                {{ msg_result.fname }} {{ msg_result.lname }}
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-455">Sender Email Address</span>
+            <div class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200">
+                {{ msg_result.email }}
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-455">Message Body</span>
+            <textarea readonly class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-655 focus:outline-none min-h-[160px]" rows="6">{{ msg_result.msg }}</textarea>
+        </div>
+
+        <div class="mt-2 flex gap-3">
+            <button type="submit" name="submit" 
+                    class="px-6 py-3 bg-brand-500 hover:bg-brand-600 active:bg-brand-700 text-white text-sm font-semibold rounded-xl transition-colors duration-200 cursor-pointer shadow-md shadow-brand-500/10">
+                Back to Inbox
+            </button>
+            <a href="reply_msg.php?msg_id={{ msg_result.id }}" 
+               class="px-6 py-3 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 border border-blue-500/20 text-sm font-semibold rounded-xl transition-colors duration-200">
+                Reply Message
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

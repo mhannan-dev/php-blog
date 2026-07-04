@@ -304,6 +304,8 @@ Seeder execution order (respects FK constraints):
 6. **Start the Local Development Server**
    ```bash
    composer start
+   php -S localhost:8888
+
    ```
    App runs at **`http://localhost:8888`**.
 

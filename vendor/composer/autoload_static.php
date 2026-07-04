@@ -14,9 +14,17 @@ class ComposerStaticInite875ae8441d070d7dda5f4b47a2117aa
         'e69f7f6ee287b969198c3c9d6777bd38' => __DIR__ . '/..' . '/symfony/polyfill-intl-normalizer/bootstrap.php',
         'b6b991a57620e2fb6b2f66f03fe9ddc2' => __DIR__ . '/..' . '/symfony/string/Resources/functions.php',
         'a4a119a56e50fbb293281d9a48007e0e' => __DIR__ . '/..' . '/symfony/polyfill-php80/bootstrap.php',
+        '89efb1254ef2d1c5d80096acd12c4098' => __DIR__ . '/..' . '/twig/twig/src/Resources/core.php',
+        'ffecb95d45175fd40f75be8a23b34f90' => __DIR__ . '/..' . '/twig/twig/src/Resources/debug.php',
+        'c7baa00073ee9c61edf148c51917cfb4' => __DIR__ . '/..' . '/twig/twig/src/Resources/escaper.php',
+        'f844ccf1d25df8663951193c3fc307c8' => __DIR__ . '/..' . '/twig/twig/src/Resources/string_loader.php',
     );
 
     public static $prefixLengthsPsr4 = array (
+        'T' =>
+        array (
+            'Twig\\' => 5,
+        ),
         'S' =>
         array (
             'Symfony\\Polyfill\\Php80\\' => 23,
@@ -56,6 +64,10 @@ class ComposerStaticInite875ae8441d070d7dda5f4b47a2117aa
     );
 
     public static $prefixDirsPsr4 = array (
+        'Twig\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/twig/twig/src',
+        ),
         'Symfony\\Polyfill\\Php80\\' =>
         array (
             0 => __DIR__ . '/..' . '/symfony/polyfill-php80',
@@ -143,17 +155,19 @@ class ComposerStaticInite875ae8441d070d7dda5f4b47a2117aa
     );
 
     public static $classMap = array (
-        'App\\Database\\Migrations\\CreateCategoriesTable' => __DIR__ . '/../..' . '/app/Database/Migrations/2026_07_04_000008_create_categories_table.php',
-        'App\\Database\\Migrations\\CreateContactsTable' => __DIR__ . '/../..' . '/app/Database/Migrations/2026_07_04_000003_create_contacts_table.php',
-        'App\\Database\\Migrations\\CreateFootersTable' => __DIR__ . '/../..' . '/app/Database/Migrations/2026_07_04_000004_create_footers_table.php',
-        'App\\Database\\Migrations\\CreateMembersTable' => __DIR__ . '/../..' . '/app/Database/Migrations/2026_07_04_000013_create_members_table.php',
-        'App\\Database\\Migrations\\CreatePagesTable' => __DIR__ . '/../..' . '/app/Database/Migrations/2026_07_04_000005_create_pages_table.php',
-        'App\\Database\\Migrations\\CreatePostsTable' => __DIR__ . '/../..' . '/app/Database/Migrations/2026_07_04_000011_create_posts_table.php',
-        'App\\Database\\Migrations\\CreateSettingsTable' => __DIR__ . '/../..' . '/app/Database/Migrations/2026_07_04_000006_create_settings_table.php',
-        'App\\Database\\Migrations\\CreateSlidersTable' => __DIR__ . '/../..' . '/app/Database/Migrations/2026_07_04_000007_create_sliders_table.php',
-        'App\\Database\\Migrations\\CreateSocialsTable' => __DIR__ . '/../..' . '/app/Database/Migrations/2026_07_04_000010_create_socials_table.php',
-        'App\\Database\\Migrations\\CreateThemesTable' => __DIR__ . '/../..' . '/app/Database/Migrations/2026_07_04_000012_create_themes_table.php',
-        'App\\Database\\Migrations\\CreateUsersTable' => __DIR__ . '/../..' . '/app/Database/Migrations/2026_07_04_000009_create_users_table.php',
+        'App\\Database\\Migrations\\Version20260704000003' => __DIR__ . '/../..' . '/app/Database/Migrations/2026_07_04_000003_create_contacts_table.php',
+        'App\\Database\\Migrations\\Version20260704000004' => __DIR__ . '/../..' . '/app/Database/Migrations/2026_07_04_000004_create_footers_table.php',
+        'App\\Database\\Migrations\\Version20260704000005' => __DIR__ . '/../..' . '/app/Database/Migrations/2026_07_04_000005_create_pages_table.php',
+        'App\\Database\\Migrations\\Version20260704000006' => __DIR__ . '/../..' . '/app/Database/Migrations/2026_07_04_000006_create_settings_table.php',
+        'App\\Database\\Migrations\\Version20260704000007' => __DIR__ . '/../..' . '/app/Database/Migrations/2026_07_04_000007_create_sliders_table.php',
+        'App\\Database\\Migrations\\Version20260704000008' => __DIR__ . '/../..' . '/app/Database/Migrations/2026_07_04_000008_create_categories_table.php',
+        'App\\Database\\Migrations\\Version20260704000009' => __DIR__ . '/../..' . '/app/Database/Migrations/2026_07_04_000009_create_users_table.php',
+        'App\\Database\\Migrations\\Version20260704000010' => __DIR__ . '/../..' . '/app/Database/Migrations/2026_07_04_000010_create_socials_table.php',
+        'App\\Database\\Migrations\\Version20260704000011' => __DIR__ . '/../..' . '/app/Database/Migrations/2026_07_04_000011_create_posts_table.php',
+        'App\\Database\\Migrations\\Version20260704000012' => __DIR__ . '/../..' . '/app/Database/Migrations/2026_07_04_000012_create_themes_table.php',
+        'App\\Database\\Migrations\\Version20260704000013' => __DIR__ . '/../..' . '/app/Database/Migrations/2026_07_04_000013_create_members_table.php',
+        'App\\Database\\Migrations\\Version20260704000014' => __DIR__ . '/../..' . '/app/Database/Migrations/2026_07_04_000014_create_tags_table.php',
+        'App\\Database\\Migrations\\Version20260704000015' => __DIR__ . '/../..' . '/app/Database/Migrations/2026_07_04_000015_create_post_tags_table.php',
         'Attribute' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/Attribute.php',
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
         'Normalizer' => __DIR__ . '/..' . '/symfony/polyfill-intl-normalizer/Resources/stubs/Normalizer.php',
