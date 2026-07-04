@@ -20,43 +20,43 @@ class MemberSeeder implements SeederInterface
                 name:     'MD. HANNAN ALI',
                 email:    'hannan@arobil.com',
                 username: 'admin',
-                password: md5('123456')
+                password: md5('Test@1234')
             ),
             new MemberDTO(
                 name:     'Mahmudul Hasan',
                 email:    'hasan@example.com',
                 username: 'hasan',
-                password: md5('123456')
+                password: md5('Test@1234')
             ),
             new MemberDTO(
                 name:     'Shahjalal',
                 email:    'jalal@example.com',
                 username: 'jalal',
-                password: md5('123456')
+                password: md5('Test@1234')
             ),
             new MemberDTO(
                 name:     'Abdul Mannan',
                 email:    'amannan@example.com',
                 username: 'amannan',
-                password: md5('123456')
+                password: md5('Test@1234')
             ),
             new MemberDTO(
                 name:     'Abdus Salam',
                 email:    'asalam@example.com',
                 username: 'asalam',
-                password: md5('123456')
+                password: md5('Test@1234')
             ),
             new MemberDTO(
                 name:     'Saddam Hossain Arif',
                 email:    'saddam@example.com',
                 username: 'saddam',
-                password: md5('123456')
+                password: md5('Test@1234')
             ),
             new MemberDTO(
                 name:     'Abdul Bari',
                 email:    'bari@example.com',
                 username: 'abari',
-                password: md5('123456')
+                password: md5('Test@1234')
             ),
         ];
 
