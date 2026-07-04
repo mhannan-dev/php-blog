@@ -20,7 +20,7 @@ $dotenv->safeLoad();
 // 3. Establish PDO Connection
 try {
     $host = $_ENV['DB_HOST'] ?? 'localhost';
-    $dbname = $_ENV['DB_NAME'] ?? 'blog_cms';
+    $dbname = $_ENV['DB_NAME'] ?? 'blg';
     $user = $_ENV['DB_USER'] ?? 'root';
     $pass = $_ENV['DB_PASS'] ?? '';
 

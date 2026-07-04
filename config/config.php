@@ -7,7 +7,7 @@ define('DB_PASS', $_ENV['DB_PASS'] ?? '');
 define('DB_NAME', $_ENV['DB_NAME'] ?? 'blg');
 
 // ─── Site ────────────────────────────────────────────────────────────────────
-define('TITLE',     $_ENV['TITLE']     ?? 'MH CMS');
+define('TITLE',     $_ENV['TITLE']     ?? 'Nexus CMS');
 define('META_DESC', $_ENV['META_DESC'] ?? 'A blog developed by Muhammad Hannan using PHP & MySQL.');
 define('KEYWORDS',  $_ENV['KEYWORDS']  ?? 'PHP, Laravel, Vue JS, WordPress, plugin');
 
