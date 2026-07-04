@@ -1,4 +1,4 @@
-# 🚀 MH CMS — Raw PHP Blog Engine
+# 🚀 Nexus CMS — Raw PHP Blog Engine
 
 [![PHP Version](https://img.shields.io/badge/php-%5E8.0-blue.svg?style=flat-square)](https://www.php.net/)
 [![Composer](https://img.shields.io/badge/composer-phpdotenv-8892BF.svg?style=flat-square)](https://packagist.org/packages/vlucas/phpdotenv)
@@ -7,7 +7,7 @@
 
 A lightweight, robust, Object-Oriented PHP blogging engine and content management system. Built using raw PHP OOP principles, a clean Singleton MySQLi wrapper, Doctrine Migrations for schema versioning, and a fully typed DTO-driven seeder system.
 
-Designed for speed, ease of configuration, and flexibility, **MH CMS** serves as a production-ready starting template for custom PHP web applications or a showcase of pure OOP PHP design patterns.
+Designed for speed, ease of configuration, and flexibility, **Nexus CMS** serves as a production-ready starting template for custom PHP web applications or a showcase of pure OOP PHP design patterns.
 
 ---
 
@@ -57,7 +57,7 @@ graph TD
     B --> E[Singleton Database]
     B --> F[Helpers — Format / Debug]
     B --> G[Models Layer]
-    G --> H[Post · User · Category · Page · Contact · Setting]
+    G --> H[Post · User · Category · Page · Contact · Site]
 
     CLI1[bin/migrate] --> I[Doctrine Migrations]
     I --> J[AbstractMigration subclasses]
@@ -90,7 +90,7 @@ Models map domain logic and database operations, keeping script files clean:
 | `User` | `users` | `getByUsername`, `create`, `update`, `delete` |
 | `Page` | `pages` | `getByName`, `create`, `update` |
 | `Contact` | `contacts` | `getAll`, `create`, `markRead` |
-| `Setting` | `settings` | `get`, `update` |
+| `Site` | `settings` | `getInfo`, `getAllSiteInfo`, `getSiteInfoById` |
 
 ### 🗄️ Database Layer (`app/Database/`)
 
@@ -230,7 +230,7 @@ Seeder execution order (respects FK constraints):
 │   │   ├── Debug.php               # dump() — dev-only debug helper
 │   │   └── Format.php              # Content sanitization & formatting
 │   ├── Models/                     # Database-mapped PHP classes
-│   │   └── Post.php · User.php · Category.php · ... (7 total)
+│   │   └── Post.php · User.php · Category.php · ... (6 total)
 │   └── bootstrap.php               # App entry bootstrap
 ├── bin/                            # CLI entry points
 │   ├── make-migration              # Generate Laravel-style migration file
@@ -244,6 +244,7 @@ Seeder execution order (respects FK constraints):
 │   └── AGENTS.md                   # OWASP rules, coding standards
 ├── .env                            # Active environment (never commit)
 ├── .env.example                    # Environment configuration template
+├── .gitignore                      # Files excluded from version control
 ├── composer.json                   # Composer config & script shortcuts
 ├── db-seed.php                     # CLI entry point — runs DatabaseSeeder
 └── migrations.php                  # Doctrine Migrations config (pure PHP array)
@@ -283,7 +284,7 @@ Seeder execution order (respects FK constraints):
    DB_NAME=blg
    APP_ENV=development
 
-   TITLE="MH CMS"
+   TITLE="Nexus CMS"
    META_DESC="A blog developed by Muhammad Hannan using PHP & MySQL."
    KEYWORDS="PHP, Laravel, Vue JS, WordPress, plugin"
    ```
