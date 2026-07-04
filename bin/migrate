@@ -1,0 +1,106 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * bin/migrate — Doctrine Migrations CLI entry point.
+ *
+ * Usage:
+ *   php bin/migrate migrate            # apply all pending migrations
+ *   php bin/migrate status             # list applied / pending versions
+ *   php bin/migrate generate           # generate a blank migration class
+ *   php bin/migrate execute --up 'App\Database\Migrations\CreateSettingsTable'
+ *   php bin/migrate execute --down 'App\Database\Migrations\CreateSettingsTable'
+ */
+
+declare(strict_types=1);
+
+use Doctrine\DBAL\DriverManager;
+use Doctrine\Migrations\AbstractMigration;
+use Doctrine\Migrations\Configuration\Configuration;
+use Doctrine\Migrations\Configuration\Connection\ExistingConnection;
+use Doctrine\Migrations\Configuration\Migration\ExistingConfiguration;
+use Doctrine\Migrations\DependencyFactory;
+use Doctrine\Migrations\Metadata\Storage\TableMetadataStorageConfiguration;
+use Doctrine\Migrations\Tools\Console\Command;
+use Symfony\Component\Console\Application;
+
+// ── Autoloader ────────────────────────────────────────────────────────────────
+$root = dirname(__DIR__);
+require $root . '/vendor/autoload.php';
+
+// ── Load .env ─────────────────────────────────────────────────────────────────
+Dotenv\Dotenv::createImmutable($root)->safeLoad();
+
+// ── DBAL connection ───────────────────────────────────────────────────────────
+$connection = DriverManager::getConnection([
+    'driver'   => 'pdo_mysql',
+    'host'     => $_ENV['DB_HOST']     ?? 'localhost',
+    'port'     => (int)($_ENV['DB_PORT'] ?? 3306),
+    'dbname'   => $_ENV['DB_NAME']     ?? 'blg',
+    'user'     => $_ENV['DB_USER']     ?? 'root',
+    'password' => $_ENV['DB_PASS']     ?? '',
+    'charset'  => 'utf8mb4',
+]);
+
+// ── Build Configuration manually ─────────────────────────────────────────────
+// This bypasses Doctrine's GlobFinder filename comparison (which fails on
+// Windows with mixed-slash paths) and directly registers each migration class.
+
+$migrationsDir  = $root . '/app/Database/Migrations';
+$migrationsNs   = 'App\\Database\\Migrations';
+
+// Track which classes existed before we require migration files
+$classesBefore = get_declared_classes();
+
+foreach (glob($migrationsDir . '/*.php') ?: [] as $file) {
+    require_once $file;
+}
+
+$config = new Configuration();
+
+// ── Storage table ─────────────────────────────────────────────────────────────
+$storage = new TableMetadataStorageConfiguration();
+$storage->setTableName('doctrine_migration_versions');
+$config->setMetadataStorageConfiguration($storage);
+
+// ── Register discovered migration classes ─────────────────────────────────────
+foreach (get_declared_classes() as $class) {
+    if (
+        str_starts_with($class, $migrationsNs . '\\')
+        && is_subclass_of($class, AbstractMigration::class)
+        && !(new ReflectionClass($class))->isAbstract()
+    ) {
+        $config->addMigrationClass($class);
+    }
+}
+
+// ── Keep directory registered so generate/diff commands work ─────────────────
+$config->addMigrationsDirectory($migrationsNs, $migrationsDir);
+$config->setAllOrNothing(true);
+$config->setTransactional(true);
+$config->setCheckDatabasePlatform(true);
+
+// ── Wire up factory ───────────────────────────────────────────────────────────
+$factory = DependencyFactory::fromConnection(
+    new ExistingConfiguration($config),
+    new ExistingConnection($connection)
+);
+
+// ── CLI application ───────────────────────────────────────────────────────────
+$cli = new Application('Doctrine Migrations');
+$cli->setCatchExceptions(true);
+$cli->addCommands([
+    new Command\DumpSchemaCommand($factory),
+    new Command\ExecuteCommand($factory),
+    new Command\GenerateCommand($factory),
+    new Command\LatestCommand($factory),
+    new Command\ListCommand($factory),
+    new Command\MigrateCommand($factory),
+    new Command\RollupCommand($factory),
+    new Command\StatusCommand($factory),
+    new Command\SyncMetadataCommand($factory),
+    new Command\VersionCommand($factory),
+    new Command\DiffCommand($factory),
+]);
+
+$cli->run();

@@ -74,7 +74,6 @@ class Database
             error_log('DB select error: ' . $this->link->error . ' | Query: ' . $query);
             return false;
         }
-
         return $result->num_rows > 0 ? $result : false;
     }
 

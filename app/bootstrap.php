@@ -20,6 +20,9 @@ require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/Core/Database.php';
 require_once __DIR__ . '/Core/Session.php';
 require_once __DIR__ . '/Helpers/Format.php';
+if (($_ENV['APP_ENV'] ?? 'production') === 'development') {
+    require_once __DIR__ . '/Helpers/Debug.php';
+}
 
 // ─── Models ────────────────────────────────────────────────────────────────
 require_once __DIR__ . '/Models/Post.php';

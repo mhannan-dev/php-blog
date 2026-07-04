@@ -1,0 +1,206 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * bin/make-model — Generate a Model class (and optionally a migration).
+ *
+ * Usage:
+ *   php bin/make-model Test              # creates app/Models/Test.php
+ *   php bin/make-model Test -m           # creates model + migration
+ *   php bin/make-model ProductCategory   # PascalCase supported
+ *
+ * Composer shortcuts:
+ *   composer make:model Test
+ *   composer make:model Test -- -m
+ */
+
+declare(strict_types=1);
+
+// ── Validate arguments ────────────────────────────────────────────────────────
+if ($argc < 2 || empty(trim($argv[1]))) {
+    fwrite(STDERR, "\n  Usage: php bin/make-model <ModelName> [-m]\n");
+    fwrite(STDERR, "  Example: php bin/make-model Setting\n");
+    fwrite(STDERR, "  Example: php bin/make-model Setting -m\n\n");
+    exit(1);
+}
+
+$modelName    = ucfirst(trim($argv[1]));
+$withMigration = in_array('-m', array_slice($argv, 2), true);
+
+// Only allow valid PHP class names
+if (!preg_match('/^[A-Za-z][A-Za-z0-9]*$/', $modelName)) {
+    fwrite(STDERR, "\n  Error: Model name must be PascalCase (e.g. Setting, ProductCategory)\n\n");
+    exit(1);
+}
+
+$projectRoot = dirname(__DIR__);
+$modelsDir   = $projectRoot . '/app/Models';
+$modelFile   = $modelsDir . '/' . $modelName . '.php';
+
+// ── Check for duplicate ───────────────────────────────────────────────────────
+if (file_exists($modelFile)) {
+    fwrite(STDERR, "\n  Error: Model already exists: app/Models/{$modelName}.php\n\n");
+    exit(1);
+}
+
+// ── Derive table name (PascalCase → snake_case plural) ───────────────────────
+// e.g. ProductCategory → product_categories
+function toTableName(string $modelName): string
+{
+    // Insert underscore before uppercase letters
+    $snake = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $modelName));
+
+    // Basic pluralisation
+    if (str_ends_with($snake, 'y') && !str_ends_with($snake, 'ay') && !str_ends_with($snake, 'ey')) {
+        return rtrim($snake, 'y') . 'ies';
+    }
+    if (str_ends_with($snake, 's') || str_ends_with($snake, 'x') || str_ends_with($snake, 'z')) {
+        return $snake . 'es';
+    }
+    return $snake . 's';
+}
+
+$table = toTableName($modelName);
+
+// ── Model stub ────────────────────────────────────────────────────────────────
+$modelStub = <<<PHP
+<?php
+
+/**
+ * {$modelName} — database operations for the `{$table}` table.
+ */
+class {$modelName}
+{
+    public function __construct(private Database \$db) {}
+
+    /**
+     * Fetch all records.
+     */
+    public function getAll(): mysqli_result|false
+    {
+        return \$this->db->select("SELECT * FROM {$table} ORDER BY id DESC");
+    }
+
+    /**
+     * Find a single record by primary key.
+     */
+    public function getById(int \$id): array|false
+    {
+        \$result = \$this->db->select("SELECT * FROM {$table} WHERE id = \$id LIMIT 1");
+        return \$result ? \$result->fetch_assoc() : false;
+    }
+
+    /**
+     * Insert a new record.
+     * TODO: replace with real columns.
+     */
+    public function create(array \$data): bool
+    {
+        // Example:
+        // \$name = \$this->db->escape(\$data['name']);
+        // return \$this->db->insert("INSERT INTO {$table} (name) VALUES ('\$name')");
+        return false;
+    }
+
+    /**
+     * Update an existing record by ID.
+     * TODO: replace with real columns.
+     */
+    public function update(int \$id, array \$data): bool
+    {
+        // Example:
+        // \$name = \$this->db->escape(\$data['name']);
+        // return \$this->db->update("UPDATE {$table} SET name = '\$name' WHERE id = \$id");
+        return false;
+    }
+
+    /**
+     * Delete a record by ID.
+     */
+    public function delete(int \$id): bool
+    {
+        return \$this->db->delete("DELETE FROM {$table} WHERE id = \$id");
+    }
+}
+PHP;
+
+// ── Write model ───────────────────────────────────────────────────────────────
+if (!is_dir($modelsDir)) {
+    mkdir($modelsDir, 0755, true);
+}
+file_put_contents($modelFile, $modelStub);
+
+echo "\n";
+echo "  Model created:\n";
+echo "    app/Models/{$modelName}.php\n";
+echo "    Class: {$modelName}  |  Table: {$table}\n";
+
+// ── Optionally create migration ───────────────────────────────────────────────
+if ($withMigration) {
+    $migrationsDir = $projectRoot . '/app/Database/Migrations';
+    $timestamp     = date('Y_m_d_His');
+    $migrationSlug = 'create_' . $table . '_table';
+    $className     = 'Create' . ucfirst(str_replace('_', '', ucwords($table, '_'))) . 'Table';
+    $migrationFile = $migrationsDir . '/' . $timestamp . '_' . $migrationSlug . '.php';
+
+    if (!is_dir($migrationsDir)) {
+        mkdir($migrationsDir, 0755, true);
+    }
+
+    $migrationStub = <<<PHP
+<?php
+
+declare(strict_types=1);
+
+namespace App\Database\Migrations;
+
+use Doctrine\DBAL\Schema\Schema;
+use Doctrine\Migrations\AbstractMigration;
+
+final class {$className} extends AbstractMigration
+{
+    public function getDescription(): string
+    {
+        return 'Create {$table} table';
+    }
+
+    public function up(Schema \$schema): void
+    {
+        if (\$schema->hasTable('{$table}')) {
+            return;
+        }
+
+        \$t = \$schema->createTable('{$table}');
+        \$t->addColumn('id', 'integer', ['autoincrement' => true, 'unsigned' => true, 'notnull' => true]);
+        // TODO: add columns here
+        \$t->setPrimaryKey(['id']);
+    }
+
+    public function down(Schema \$schema): void
+    {
+        if (\$schema->hasTable('{$table}')) {
+            \$schema->dropTable('{$table}');
+        }
+    }
+}
+PHP;
+
+    file_put_contents($migrationFile, $migrationStub);
+
+    $migrationBasename = $timestamp . '_' . $migrationSlug . '.php';
+    echo "\n";
+    echo "  Migration created:\n";
+    echo "    app/Database/Migrations/{$migrationBasename}\n";
+    echo "    Class: App\\Database\\Migrations\\{$className}\n";
+    echo "\n";
+    echo "  Next steps:\n";
+    echo "    1. Edit the migration and fill in the columns\n";
+    echo "    2. composer dump-autoload\n";
+    echo "    3. composer migrate\n";
+} else {
+    echo "\n";
+    echo "  Tip: use -m to also generate a migration:\n";
+    echo "    composer make:model {$modelName} -- -m\n";
+}
+
+echo "\n";
