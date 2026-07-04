@@ -1,4 +1,4 @@
-# 🚀 MH CMS — Raw PHP OOP Blog Engine
+# 🚀 MH CMS — Raw PHP Blog Engine
 
 [![PHP Version](https://img.shields.io/badge/php-%5E8.0-blue.svg?style=flat-square)](https://www.php.net/)
 [![Composer](https://img.shields.io/badge/composer-phpdotenv-8892BF.svg?style=flat-square)](https://packagist.org/packages/vlucas/phpdotenv)
