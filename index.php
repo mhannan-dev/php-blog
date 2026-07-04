@@ -22,7 +22,7 @@ $posts       = $postModel->getPaginated($offset, $perPage);
             <?php if ($post['image']): ?>
                 <!-- Post Thumbnail -->
                 <div class="w-full md:w-2/5 shrink-0 rounded-2xl overflow-hidden aspect-[16/10] bg-slate-900 border border-white/5 relative group">
-                    <a href="post.php?id=<?php echo (int) $post['id']; ?>" class="block w-full h-full">
+                    <a href="post.php?slug=<?php echo Format::e($post['slug']); ?>" class="block w-full h-full">
                         <img src="admin/<?php echo Format::e($post['image']); ?>"
                              alt="<?php echo Format::e($post['title']); ?>"
                              class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
@@ -35,7 +35,7 @@ $posts       = $postModel->getPaginated($offset, $perPage);
                 <div class="flex flex-col gap-3">
                     <!-- Title -->
                     <h2 class="text-xl sm:text-2xl font-bold font-outfit text-white leading-snug hover:text-brand-300 transition-colors duration-200">
-                        <a href="post.php?id=<?php echo (int) $post['id']; ?>">
+                        <a href="post.php?slug=<?php echo Format::e($post['slug']); ?>">
                             <?php echo Format::e($post['title']); ?>
                         </a>
                     </h2>
@@ -61,7 +61,7 @@ $posts       = $postModel->getPaginated($offset, $perPage);
 
                 <!-- Footer details -->
                 <div class="flex justify-between items-center mt-2 border-t border-white/5 pt-4">
-                    <a href="post.php?id=<?php echo (int) $post['id']; ?>" 
+                    <a href="post.php?slug=<?php echo Format::e($post['slug']); ?>" 
                        class="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-400 hover:text-brand-300 transition-colors duration-200 uppercase tracking-wider">
                         Read Full Article <i class="fa-solid fa-arrow-right-long"></i>
                     </a>

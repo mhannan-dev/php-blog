@@ -2,21 +2,13 @@
 
 namespace App\Database\DTOs;
 
-/**
- * Data Transfer Object for a single category row.
- *
- * Carries the data needed to insert one record into the `categories` table.
- */
-class CategoryDTO
+class TagDTO
 {
     public function __construct(
         public readonly string $name,
         public readonly string $slug
     ) {}
 
-    /**
-     * Return the DTO as an associative array for PDO binding.
-     */
     public function toArray(): array
     {
         return [

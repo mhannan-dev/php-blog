@@ -1,20 +1,20 @@
 <?php
 require_once __DIR__ . '/app/bootstrap.php';
 
-if (!isset($_GET['id']) || (int) $_GET['id'] <= 0) {
+if (!isset($_GET['slug']) || empty($_GET['slug'])) {
     header('Location: index.php');
     exit();
 }
 
-$postId = (int) $_GET['id'];
-$post   = $postModel->getById($postId);
+$postSlug = $_GET['slug'];
+$post     = $postModel->getBySlug($postSlug);
 
 if (!$post) {
     header('Location: 404.php');
     exit();
 }
 
-$relatedPosts = $postModel->getRelated((int) $post['cat'], $postId, 6);
+$relatedPosts = $postModel->getRelated((int) $post['category_id'], (int) $post['id'], 6);
 ?>
 
 <?php include './inc/header.php'; ?>
@@ -68,13 +68,13 @@ $relatedPosts = $postModel->getRelated((int) $post['cat'], $postId, 6);
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                 <?php while ($related = $relatedPosts->fetch_assoc()): ?>
                     <div class="glass-card rounded-2xl p-4 overflow-hidden shadow-md shadow-black/5 hover:shadow-brand-500/5 hover:-translate-y-0.5 transition-all duration-200 flex flex-col gap-3">
-                        <a href="post.php?id=<?php echo (int) $related['id']; ?>" class="block rounded-xl overflow-hidden aspect-[16/10] bg-slate-900 border border-white/5 relative group">
+                        <a href="post.php?slug=<?php echo Format::e($related['slug']); ?>" class="block rounded-xl overflow-hidden aspect-[16/10] bg-slate-900 border border-white/5 relative group">
                             <img src="admin/<?php echo Format::e($related['image']); ?>"
                                  alt="<?php echo Format::e($related['title']); ?>"
                                  class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                         </a>
                         <h4 class="font-bold text-sm text-slate-200 hover:text-white transition-colors duration-200 line-clamp-2">
-                            <a href="post.php?id=<?php echo (int) $related['id']; ?>">
+                            <a href="post.php?slug=<?php echo Format::e($related['slug']); ?>">
                                 <?php echo Format::e(Format::textShorten($related['title'], 50)); ?>
                             </a>
                         </h4>

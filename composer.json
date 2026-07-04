@@ -23,10 +23,11 @@
     "scripts": {
         "start": "php -S localhost:8888",
         "migrate": "php bin/migrate migrate --no-interaction",
+        "migrate:fresh": "php bin/migrate-fresh",
         "migrate:status": "php bin/migrate status",
         "migrate:gen": "php bin/migrate generate",
         "migrate:diff": "php bin/migrate diff",
-        "make:model":     "php bin/make-model",
+        "make:model": "php bin/make-model",
         "make:migration": "php bin/make-migration",
         "migrate:down": "php bin/migrate execute --down --all --no-interaction",
         "db:seed": "php db-seed.php"

@@ -11,7 +11,11 @@ class PageDTO
 {
     public function __construct(
         public readonly string $name,
-        public readonly string $body
+        public readonly string $slug,
+        public readonly string $body,
+        public readonly string $meta_title = '',
+        public readonly string $meta_description = '',
+        public readonly string $meta_keywords = ''
     ) {}
 
     /**
@@ -20,8 +24,12 @@ class PageDTO
     public function toArray(): array
     {
         return [
-            'name' => $this->name,
-            'body' => $this->body,
+            'name'             => $this->name,
+            'slug'             => $this->slug,
+            'body'             => $this->body,
+            'meta_title'       => $this->meta_title,
+            'meta_description' => $this->meta_description,
+            'meta_keywords'    => $this->meta_keywords,
         ];
     }
 }

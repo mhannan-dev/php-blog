@@ -6,23 +6,23 @@ $metaDescription = '';
 $metaKeywords    = '';
 
 $postIdMeta = (int) ($_GET['id']      ?? 0);
-$catIdMeta  = (int) ($_GET['cat_post'] ?? 0);
-$pageIdMeta = (int) ($_GET['page_id']  ?? 0);
+$postSlugMeta = $_GET['slug'] ?? '';
+$catIdMeta  = $_GET['cat_post'] ?? '';
+$pageSlugMeta = $_GET['slug']  ?? '';
 
-if ($postIdMeta > 0) {
-    $metaPost = $postModel->getById($postIdMeta);
+if ($postIdMeta > 0 || !empty($postSlugMeta)) {
+    $metaPost = $postIdMeta > 0 ? $postModel->getById($postIdMeta) : $postModel->getBySlug($postSlugMeta);
     if ($metaPost) {
         $metaTitle       = Format::e($metaPost['title']) . ' — ' . TITLE;
         $metaDescription = Format::e(mb_substr(strip_tags($metaPost['body']), 0, 160));
-        $metaKeywords    = Format::e($metaPost['tags']);
     }
-} elseif ($catIdMeta > 0) {
-    $metaCat = $categoryModel->getById($catIdMeta);
+} elseif (!empty($catIdMeta)) {
+    $metaCat = $categoryModel->getByParam($catIdMeta);
     if ($metaCat) {
         $metaTitle = Format::e($metaCat['name']) . ' — ' . TITLE;
     }
-} elseif ($pageIdMeta > 0) {
-    $metaPage = $pageModel->getById($pageIdMeta);
+} elseif (!empty($pageSlugMeta)) {
+    $metaPage = $pageModel->getBySlug($pageSlugMeta);
     if ($metaPage) {
         $metaTitle       = Format::e($metaPage['name']) . ' — ' . TITLE;
         $metaDescription = Format::e(mb_substr(strip_tags($metaPage['body']), 0, 160));
@@ -178,7 +178,7 @@ $socialLinks = $siteModel->getSocialLinks();
             <a href="index.php" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-white/5 hover:text-white <?php echo basename($_SERVER['PHP_SELF']) === 'index.php' ? 'bg-brand-500/20 text-brand-300 border border-brand-500/30' : 'text-slate-300'; ?>">Home</a>
             
             <?php if ($navPages): while ($p = $navPages->fetch_assoc()): ?>
-                <a href="page.php?page_id=<?php echo (int) $p['id']; ?>" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-white/5 hover:text-white <?php echo (isset($_GET['page_id']) && (int)$_GET['page_id'] === (int)$p['id']) ? 'bg-brand-500/20 text-brand-300 border border-brand-500/30' : 'text-slate-300'; ?>">
+                <a href="page.php?slug=<?php echo Format::e($p['slug']); ?>" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-white/5 hover:text-white <?php echo (isset($_GET['slug']) && $_GET['slug'] === $p['slug']) ? 'bg-brand-500/20 text-brand-300 border border-brand-500/30' : 'text-slate-300'; ?>">
                     <?php echo Format::e($p['name']); ?>
                 </a>
             <?php endwhile; endif; ?>
@@ -192,7 +192,7 @@ $socialLinks = $siteModel->getSocialLinks();
                         $navCats->data_seek(0);
                         while ($c = $navCats->fetch_assoc()): 
                     ?>
-                        <a href="category/<?php echo Format::e($c['slug']); ?>" class="px-3.5 py-2 text-sm font-medium rounded-lg transition-all duration-150 text-slate-300 hover:bg-brand-500/20 hover:text-brand-300 mx-1.5 flex items-center gap-2 <?php echo (isset($_GET['cat_post']) && ($_GET['cat_post'] == $c['slug'] || $_GET['cat_post'] == $c['id'])) ? 'bg-brand-500/20 text-brand-300' : ''; ?>">
+                        <a href="cat_posts.php?cat_post=<?php echo Format::e($c['slug']); ?>" class="px-3.5 py-2 text-sm font-medium rounded-lg transition-all duration-150 text-slate-300 hover:bg-brand-500/20 hover:text-brand-300 mx-1.5 flex items-center gap-2 <?php echo (isset($_GET['cat_post']) && ($_GET['cat_post'] == $c['slug'] || $_GET['cat_post'] == $c['id'])) ? 'bg-brand-500/20 text-brand-300' : ''; ?>">
                             <i class="fa-solid fa-folder text-[10px] text-brand-400"></i> <?php echo Format::e($c['name']); ?>
                         </a>
                     <?php endwhile; endif; ?>

@@ -15,7 +15,7 @@ if (!$category) {
     exit();
 }
 
-$catPosts = $postModel->getByCat((int) $category['id']);
+$catPosts = $postModel->getByCategory((int) $category['id']);
 ?>
 
 <?php include './inc/header.php'; ?>
@@ -36,7 +36,7 @@ $catPosts = $postModel->getByCat((int) $category['id']);
                     
                     <?php if ($post['image']): ?>
                         <div class="w-full md:w-1/3 shrink-0 rounded-2xl overflow-hidden aspect-[16/10] bg-slate-900 border border-white/5 relative group">
-                            <a href="post.php?id=<?php echo (int) $post['id']; ?>" class="block w-full h-full">
+                            <a href="post.php?slug=<?php echo Format::e($post['slug']); ?>" class="block w-full h-full">
                                 <img src="admin/<?php echo Format::e($post['image']); ?>"
                                      alt="<?php echo Format::e($post['title']); ?>"
                                      class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
@@ -47,7 +47,7 @@ $catPosts = $postModel->getByCat((int) $category['id']);
                     <div class="flex flex-col justify-between py-1 flex-grow gap-3">
                         <div class="flex flex-col gap-2">
                             <h3 class="text-xl font-bold font-outfit text-white hover:text-brand-300 transition-colors duration-200 leading-snug">
-                                <a href="post.php?id=<?php echo (int) $post['id']; ?>">
+                                <a href="post.php?slug=<?php echo Format::e($post['slug']); ?>">
                                     <?php echo Format::e($post['title']); ?>
                                 </a>
                             </h3>
@@ -63,7 +63,7 @@ $catPosts = $postModel->getByCat((int) $category['id']);
                             </p>
                         </div>
 
-                        <a href="post.php?id=<?php echo (int) $post['id']; ?>" 
+                        <a href="post.php?slug=<?php echo Format::e($post['slug']); ?>" 
                            class="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-400 hover:text-brand-300 transition-colors duration-205 uppercase tracking-wider">
                             Read More <i class="fa-solid fa-arrow-right-long"></i>
                         </a>

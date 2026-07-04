@@ -11,19 +11,19 @@ class CategorySeeder implements SeederInterface
     public function run(PDO $pdo): void
     {
         $stmt = $pdo->prepare("
-            INSERT INTO categories (name) 
-            VALUES (:name)
+            INSERT INTO categories (name, slug) 
+            VALUES (:name, :slug)
         ");
 
         $categories = [
-            new CategoryDTO(name: 'Java'),
-            new CategoryDTO(name: 'SQL'),
-            new CategoryDTO(name: 'Javascript'),
-            new CategoryDTO(name: 'Oracle'),
-            new CategoryDTO(name: 'Mongo DB'),
-            new CategoryDTO(name: 'Django'),
-            new CategoryDTO(name: 'PHP'),
-            new CategoryDTO(name: 'Python'),
+            new CategoryDTO(name: 'Java', slug: 'java'),
+            new CategoryDTO(name: 'SQL', slug: 'sql'),
+            new CategoryDTO(name: 'Javascript', slug: 'javascript'),
+            new CategoryDTO(name: 'Oracle', slug: 'oracle'),
+            new CategoryDTO(name: 'Mongo DB', slug: 'mongo-db'),
+            new CategoryDTO(name: 'Django', slug: 'django'),
+            new CategoryDTO(name: 'PHP', slug: 'php'),
+            new CategoryDTO(name: 'Python', slug: 'python'),
         ];
 
         foreach ($categories as $dto) {

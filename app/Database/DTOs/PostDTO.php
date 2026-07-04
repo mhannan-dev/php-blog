@@ -10,14 +10,17 @@ namespace App\Database\DTOs;
 class PostDTO
 {
     public function __construct(
-        public readonly int    $cat,
+        public readonly int    $category_id,
         public readonly string $title,
+        public readonly string $slug,
         public readonly string $body,
         public readonly string $image,
         public readonly string $author,
-        public readonly string $tags,
         public readonly string $date,
-        public readonly int    $userid
+        public readonly int    $user_id,
+        public readonly string $meta_title = '',
+        public readonly string $meta_description = '',
+        public readonly string $meta_keywords = ''
     ) {}
 
     /**
@@ -26,14 +29,17 @@ class PostDTO
     public function toArray(): array
     {
         return [
-            'cat'    => $this->cat,
-            'title'  => $this->title,
-            'body'   => $this->body,
-            'image'  => $this->image,
-            'author' => $this->author,
-            'tags'   => $this->tags,
-            'date'   => $this->date,
-            'userid' => $this->userid,
+            'category_id'      => $this->category_id,
+            'title'            => $this->title,
+            'slug'             => $this->slug,
+            'body'             => $this->body,
+            'image'            => $this->image,
+            'author'           => $this->author,
+            'date'             => $this->date,
+            'user_id'          => $this->user_id,
+            'meta_title'       => $this->meta_title,
+            'meta_description' => $this->meta_description,
+            'meta_keywords'    => $this->meta_keywords,
         ];
     }
 }

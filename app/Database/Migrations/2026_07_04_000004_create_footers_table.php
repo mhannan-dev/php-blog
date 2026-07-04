@@ -7,7 +7,7 @@ namespace App\Database\Migrations;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
-final class CreateFootersTable extends AbstractMigration
+final class Version20260704000004 extends AbstractMigration
 {
     public function getDescription(): string
     {

@@ -1,0 +1,62 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * bin/migrate-fresh — Drop all tables and optionally re-seed.
+ * Similar to Laravel's `artisan migrate:fresh --seed`.
+ */
+
+declare(strict_types=1);
+
+use Doctrine\DBAL\DriverManager;
+
+// ── Autoloader & Dotenv ───────────────────────────────────────────────────────
+$root = dirname(__DIR__);
+require $root . '/vendor/autoload.php';
+Dotenv\Dotenv::createImmutable($root)->safeLoad();
+
+// ── DBAL connection ───────────────────────────────────────────────────────────
+$connection = DriverManager::getConnection([
+    'driver'   => 'pdo_mysql',
+    'host'     => $_ENV['DB_HOST']     ?? 'localhost',
+    'port'     => (int)($_ENV['DB_PORT'] ?? 3306),
+    'dbname'   => $_ENV['DB_NAME']     ?? 'blg',
+    'user'     => $_ENV['DB_USER']     ?? 'root',
+    'password' => $_ENV['DB_PASS']     ?? '',
+    'charset'  => 'utf8mb4',
+]);
+
+echo "\nDropping all tables in database '{$_ENV['DB_NAME']}'...\n";
+
+$schemaManager = $connection->createSchemaManager();
+$tables = $schemaManager->listTableNames();
+
+if (empty($tables)) {
+    echo "Database is already empty.\n";
+} else {
+    $connection->executeStatement('SET FOREIGN_KEY_CHECKS = 0');
+    foreach ($tables as $table) {
+        $schemaManager->dropTable($table);
+        echo "  Dropped: {$table}\n";
+    }
+    $connection->executeStatement('SET FOREIGN_KEY_CHECKS = 1');
+}
+
+echo "\nRunning migrations...\n";
+passthru('php ' . escapeshellarg($root . '/bin/migrate') . ' migrate --no-interaction', $resultCode);
+
+if ($resultCode !== 0) {
+    echo "\nMigration failed.\n";
+    exit($resultCode);
+}
+
+// Check for --seed flag
+if (in_array('--seed', $argv, true)) {
+    echo "\nRunning seeder...\n";
+    passthru('php ' . escapeshellarg($root . '/db-seed.php'), $seedResult);
+    if ($seedResult !== 0) {
+        exit($seedResult);
+    }
+}
+
+echo "\nDone!\n";

@@ -32,7 +32,7 @@ $sidebarPages  = $pageModel->getAll();
         <ul class="flex flex-col gap-4">
             <?php if ($sidebarPosts): while ($post = $sidebarPosts->fetch_assoc()): ?>
                 <li>
-                    <a href="post.php?id=<?php echo (int) $post['id']; ?>" class="flex items-center gap-3 group">
+                    <a href="post.php?slug=<?php echo Format::e($post['slug']); ?>" class="flex items-center gap-3 group">
                         <?php if ($post['image']): ?>
                             <img src="admin/<?php echo Format::e($post['image']); ?>" 
                                  class="h-12 w-12 rounded-lg object-cover bg-slate-800 transition-transform duration-200 group-hover:scale-105 shrink-0" 
@@ -57,7 +57,7 @@ $sidebarPages  = $pageModel->getAll();
         <ul class="flex flex-col gap-2">
             <?php if ($sidebarPages): while ($page = $sidebarPages->fetch_assoc()): ?>
                 <li>
-                    <a href="page.php?page_id=<?php echo (int) $page['id']; ?>" 
+                    <a href="page.php?slug=<?php echo Format::e($page['slug']); ?>" 
                        class="flex items-center justify-between text-sm text-slate-300 hover:text-white hover:translate-x-1 transition-all duration-200 py-1">
                         <span><?php echo Format::e($page['name']); ?></span>
                         <i class="fa-solid fa-chevron-right text-[10px] text-slate-500"></i>

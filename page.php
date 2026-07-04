@@ -1,13 +1,13 @@
 <?php
 require_once __DIR__ . '/app/bootstrap.php';
 
-if (!isset($_GET['page_id']) || (int) $_GET['page_id'] <= 0) {
+if (!isset($_GET['slug']) || empty($_GET['slug'])) {
     header('Location: index.php');
     exit();
 }
 
-$pageId   = (int) $_GET['page_id'];
-$pageData = $pageModel->getById($pageId);
+$pageSlug = $_GET['slug'];
+$pageData = $pageModel->getBySlug($pageSlug);
 
 if (!$pageData) {
     header('Location: 404.php');

@@ -14,6 +14,8 @@ use App\Database\Seeders\SliderSeeder;
 use App\Database\Seeders\SocialSeeder;
 use App\Database\Seeders\ThemeSeeder;
 use App\Database\Seeders\UserSeeder;
+use App\Database\Seeders\TagSeeder;
+use App\Database\Seeders\PostTagSeeder;
 
 class DatabaseSeeder
 {
@@ -50,6 +52,8 @@ class DatabaseSeeder
             'footers',
             'themes',
             'contacts',
+            'tags',
+            'post_tags',
         ]);
 
         // 3. Re-enable foreign key checks
@@ -70,6 +74,8 @@ class DatabaseSeeder
             FooterSeeder::class,    // Independent
             ThemeSeeder::class,     // Independent
             ContactSeeder::class,   // Independent
+            TagSeeder::class,       // Independent - must be before PostTagSeeder
+            PostTagSeeder::class,   // Depends on posts & tags
         ]);
 
         echo "\n--- Database seeding completed successfully. ---\n\n";
