@@ -1,8 +1,11 @@
-{% extends 'base.twig' %}
+{% extends 'frontend/base.twig' %}
+
+{% block slider %}
+    {# Include the slider only on the homepage #}
+    {% include 'frontend/partials/slider.twig' %}
+{% endblock %}
 
 {% block content %}
-
-{% include 'partials/slider.twig' %}
 
 <div class="flex flex-col gap-8">
     {% if posts|length > 0 %}
