@@ -50,37 +50,52 @@ $twig = null;
 if (class_exists('Twig\Environment')) {
     $loader = new \Twig\Loader\FilesystemLoader(__DIR__ . '/../resources/views');
     $twig = new \Twig\Environment($loader, [
-        'cache' => false, // Set to a path like __DIR__ . '/../cache/twig' in production
+        'cache' => false,
         'debug' => ($_ENV['APP_ENV'] ?? 'production') === 'development',
     ]);
-    
-    // Add global variables to Twig for the header and footer
-    $siteInfo = $siteModel->getInfo();
-    $twig->addGlobal('siteTitle',  $siteInfo['title'] ?? TITLE);
-    $twig->addGlobal('siteSlogan', $siteInfo['slogan'] ?? '');
-    $twig->addGlobal('siteLogo',   $siteInfo['logo'] ?? '');
-    $twig->addGlobal('socialLinks', $siteModel->getSocialLinks());
-    $twig->addGlobal('footerNote', $siteModel->getFooterNote());
-    
-    $twig->addGlobal('navPages',    $pageModel->getAll());
-    $twig->addGlobal('navCats',     $categoryModel->getAll());
-    $twig->addGlobal('sidebarCats', $categoryModel->getAll());
-    $twig->addGlobal('sidebarPosts', $postModel->getLatest(5));
-    $twig->addGlobal('sidebarPages', $pageModel->getAll());
-    $twig->addGlobal('footerCats',  $categoryModel->getAll());
-    $twig->addGlobal('footerPages', $pageModel->getAll());
 
-    // Basic request data for navigation active states
+    // ─── Helper: Convert mysqli_result → plain array ────────────────────────
+    $toArray = function ($result): array {
+        if (!$result || !($result instanceof mysqli_result)) {
+            return [];
+        }
+        return $result->fetch_all(MYSQLI_ASSOC) ?: [];
+    };
+
+    // ─── Site Info ──────────────────────────────────────────────────────────
+    $siteInfo = $siteModel->getInfo();
+    $twig->addGlobal('siteTitle',       $siteInfo['title']  ?? TITLE);
+    $twig->addGlobal('siteSlogan',      $siteInfo['slogan'] ?? '');
+    $twig->addGlobal('siteLogo',        $siteInfo['logo']   ?? '');
+    $twig->addGlobal('metaTitle',       Format::title() . ' — ' . ($siteInfo['title'] ?? TITLE));
+    $twig->addGlobal('metaDescription', META_DESC);
+    $twig->addGlobal('metaKeywords',    KEYWORDS);
+    $twig->addGlobal('socialLinks', $siteModel->getSocialLinks());
+    $twig->addGlobal('footerNote',  $siteModel->getFooterNote());
+
+    // ─── Navigation / Sidebar globals (as plain arrays) ─────────────────────
+    $allPages = $toArray($pageModel->getAll());
+    $allCats  = $toArray($categoryModel->getAll());
+    $twig->addGlobal('navPages',     $allPages);
+    $twig->addGlobal('navCats',      $allCats);
+    $twig->addGlobal('sidebarCats',  $allCats);
+    $twig->addGlobal('sidebarPosts', $toArray($postModel->getLatest(5)));
+    $twig->addGlobal('sidebarPages', $allPages);
+    $twig->addGlobal('footerCats',   $allCats);
+    $twig->addGlobal('footerPages',  $allPages);
+
+    // ─── Request globals ─────────────────────────────────────────────────────
     $twig->addGlobal('current_page', basename($_SERVER['PHP_SELF']));
-    $twig->addGlobal('current_slug', $_GET['slug'] ?? '');
-    $twig->addGlobal('current_cat',  $_GET['cat_post'] ?? '');
+    $twig->addGlobal('current_slug', $_GET['slug']      ?? '');
+    $twig->addGlobal('current_cat',  $_GET['cat_post']  ?? '');
     $twig->addGlobal('search_query', Format::e($_GET['search'] ?? ''));
-    
-    // Admin specific globals
+
+    // ─── Admin globals ───────────────────────────────────────────────────────
     $twig->addGlobal('admin_username', Session::get('userName'));
-    $twig->addGlobal('admin_role', Session::get('userRole'));
-    
-    // Base URL path
-    $basePath = str_replace(basename($_SERVER['SCRIPT_NAME']), '', $_SERVER['SCRIPT_NAME']);
+    $twig->addGlobal('admin_role',     Session::get('userRole'));
+
+    // ─── Base URL (always points to the project web root) ───────────────────
+    $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
+    $basePath  = rtrim($scriptDir, '/') . '/';
     $twig->addGlobal('base_url', $basePath);
 }
