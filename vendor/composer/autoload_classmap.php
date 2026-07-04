@@ -6,8 +6,20 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
+    'App\\Database\\Migrations\\CreateCategoriesTable' => $baseDir . '/app/Database/Migrations/2026_07_04_000008_create_categories_table.php',
+    'App\\Database\\Migrations\\CreateContactsTable' => $baseDir . '/app/Database/Migrations/2026_07_04_000003_create_contacts_table.php',
+    'App\\Database\\Migrations\\CreateFootersTable' => $baseDir . '/app/Database/Migrations/2026_07_04_000004_create_footers_table.php',
+    'App\\Database\\Migrations\\CreateMembersTable' => $baseDir . '/app/Database/Migrations/2026_07_04_000013_create_members_table.php',
+    'App\\Database\\Migrations\\CreatePagesTable' => $baseDir . '/app/Database/Migrations/2026_07_04_000005_create_pages_table.php',
+    'App\\Database\\Migrations\\CreatePostsTable' => $baseDir . '/app/Database/Migrations/2026_07_04_000011_create_posts_table.php',
+    'App\\Database\\Migrations\\CreateSettingsTable' => $baseDir . '/app/Database/Migrations/2026_07_04_000006_create_settings_table.php',
+    'App\\Database\\Migrations\\CreateSlidersTable' => $baseDir . '/app/Database/Migrations/2026_07_04_000007_create_sliders_table.php',
+    'App\\Database\\Migrations\\CreateSocialsTable' => $baseDir . '/app/Database/Migrations/2026_07_04_000010_create_socials_table.php',
+    'App\\Database\\Migrations\\CreateThemesTable' => $baseDir . '/app/Database/Migrations/2026_07_04_000012_create_themes_table.php',
+    'App\\Database\\Migrations\\CreateUsersTable' => $baseDir . '/app/Database/Migrations/2026_07_04_000009_create_users_table.php',
     'Attribute' => $vendorDir . '/symfony/polyfill-php80/Resources/stubs/Attribute.php',
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
+    'Normalizer' => $vendorDir . '/symfony/polyfill-intl-normalizer/Resources/stubs/Normalizer.php',
     'PhpToken' => $vendorDir . '/symfony/polyfill-php80/Resources/stubs/PhpToken.php',
     'Stringable' => $vendorDir . '/symfony/polyfill-php80/Resources/stubs/Stringable.php',
     'UnhandledMatchError' => $vendorDir . '/symfony/polyfill-php80/Resources/stubs/UnhandledMatchError.php',

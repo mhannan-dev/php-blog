@@ -1,10 +1,11 @@
 # 🚀 MH CMS — Raw PHP OOP Blog Engine
 
 [![PHP Version](https://img.shields.io/badge/php-%5E8.0-blue.svg?style=flat-square)](https://www.php.net/)
-[![Composer](https://img.shields.io/badge/dependency-phpdotenv-%238892BF.svg?style=flat-square)](https://packagist.org/packages/vlucas/phpdotenv)
+[![Composer](https://img.shields.io/badge/composer-phpdotenv-8892BF.svg?style=flat-square)](https://packagist.org/packages/vlucas/phpdotenv)
+[![Doctrine Migrations](https://img.shields.io/badge/doctrine-migrations%203.x-FC6A31.svg?style=flat-square)](https://www.doctrine-project.org/projects/migrations.html)
 [![License](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](LICENSE)
 
-A lightweight, robust, and custom Object-Oriented PHP blogging engine and content management system. Built using raw PHP OOP principles, standard MySQLi connections wrapped in a clean Singleton wrapper, and dynamic Model-driven layers. 
+A lightweight, robust, Object-Oriented PHP blogging engine and content management system. Built using raw PHP OOP principles, a clean Singleton MySQLi wrapper, Doctrine Migrations for schema versioning, and a fully typed DTO-driven seeder system.
 
 Designed for speed, ease of configuration, and flexibility, **MH CMS** serves as a production-ready starting template for custom PHP web applications or a showcase of pure OOP PHP design patterns.
 
@@ -32,62 +33,140 @@ Designed for speed, ease of configuration, and flexibility, **MH CMS** serves as
 
 ## 🛠️ Technology Stack
 
-*   **Runtime:** [PHP](https://www.php.net/) (OOP architecture, PSR-4 Autoloading)
-*   **Database:** MySQL (using native `mysqli` with parameterized/safe queries via Singleton wrapping)
-*   **Dependencies:** `vlucas/phpdotenv` for secure environmental variables management
-*   **Web Server:** Built-in PHP development server support or standard Apache/Laragon configurations via `.htaccess` redirection
+| Layer | Technology |
+|-------|-----------|
+| Runtime | PHP 8.0+ — OOP architecture, PSR-4 autoloading |
+| Database | MySQL / MariaDB |
+| App DB layer | Singleton `mysqli` wrapper (`app/Core/Database.php`) |
+| Migrations | Doctrine Migrations 3.x + Doctrine DBAL 3.x |
+| Seeder | PDO prepared statements, DTO value objects |
+| Environment | `vlucas/phpdotenv` |
+| CLI | Symfony Console (bundled with Doctrine Migrations) |
+| Web Server | Apache/Laragon (`.htaccess`) or `php -S` |
+| Security | OWASP Top 10 enforced — see [Security Practices](#-security-practices) |
 
 ---
 
 ## 🏗️ Architecture & Core Components
 
-This application utilizes a custom **Model-Driven Architecture** centered around a single entry point bootstrapping cycle:
-
 ```mermaid
 graph TD
-    A[Public/Admin Pages] --> B(app/bootstrap.php)
+    A[Public / Admin Pages] --> B(app/bootstrap.php)
     B --> C[Composer Autoloader]
-    B --> D[Dotenv Safe Load]
-    B --> E[Singleton Database Instance]
-    B --> F[Core Helpers / Format]
+    B --> D[Dotenv safeLoad]
+    B --> E[Singleton Database]
+    B --> F[Helpers — Format / Debug]
     B --> G[Models Layer]
-    G --> H[Post, User, Category, Page, Contact]
+    G --> H[Post · User · Category · Page · Contact · Setting]
+
+    CLI1[bin/migrate] --> I[Doctrine Migrations]
+    I --> J[AbstractMigration subclasses]
+    J --> K[(MySQL — schema)]
+
+    CLI2[db-seed.php] --> L[DatabaseSeeder]
+    L --> M[SeederInterface]
+    M --> N[CategorySeeder / UserSeeder / ...]
+    N --> O[DTOs — readonly value objects]
+    O --> K
 ```
 
 ### 💾 Core Classes
-1.  **[Database.php](file:///E:/laragon/www/php-blog/app/Core/Database.php):** Implements the Singleton pattern. Ensures exactly one database connection is reused during execution, wrapping the `mysqli` driver with safe connection details and UTF-8 charset validation.
-2.  **[Session.php](file:///E:/laragon/www/php-blog/app/Core/Session.php):** Simplifies cookie/session handling. Responsible for authorization checks, flash messages, and tracking user credentials across subdirectories.
-3.  **[Format.php](file:///E:/laragon/www/php-blog/app/Helpers/Format.php):** Implements helpers for content formatting, sanitization, and text trimming (e.g., body truncation).
+
+| Class | Path | Responsibility |
+|-------|------|----------------|
+| `Database` | `app/Core/Database.php` | Singleton `mysqli` wrapper — one connection per request |
+| `Session` | `app/Core/Session.php` | Auth checks, flash messages, session lifecycle |
+| `Format` | `app/Helpers/Format.php` | Content sanitization, text trimming |
+| `dump()` | `app/Helpers/Debug.php` | Development dump helper — renders variable, last PHP error, `$_GET`/`$_POST`/`$_SERVER` in a styled card (loaded only when `APP_ENV=development`) |
 
 ### 🏷️ Models
+
 Models map domain logic and database operations, keeping script files clean:
-*   **`Post`**: Handles retrieving, inserting, and editing articles.
-*   **`Category`**: Manages categories and category counts.
-*   **`User`**: Handles authentication and account management.
-*   **`Page`**: Fetches and stores custom page markdown/HTML.
-*   **`Contact`**: Saves contact messages and controls inbox queues.
+
+| Model | Table | Key Methods |
+|-------|-------|-------------|
+| `Post` | `posts` | `getPaginated`, `getById`, `search`, `create`, `update`, `delete` |
+| `Category` | `categories` | `getAll`, `getById`, `create`, `update`, `delete` |
+| `User` | `users` | `getByUsername`, `create`, `update`, `delete` |
+| `Page` | `pages` | `getByName`, `create`, `update` |
+| `Contact` | `contacts` | `getAll`, `create`, `markRead` |
+| `Setting` | `settings` | `get`, `update` |
+
+### 🗄️ Database Layer (`app/Database/`)
+
+**Migrations** — Schema versioning via Doctrine Migrations 3.x:
+
+| File | Class | Creates |
+|------|-------|---------|
+| `2026_07_04_000003_create_contacts_table.php` | `CreateContactsTable` | `contacts` |
+| `2026_07_04_000004_create_footers_table.php` | `CreateFootersTable` | `footers` |
+| `2026_07_04_000005_create_pages_table.php` | `CreatePagesTable` | `pages` |
+| `2026_07_04_000006_create_settings_table.php` | `CreateSettingsTable` | `settings` |
+| `2026_07_04_000007_create_sliders_table.php` | `CreateSlidersTable` | `sliders` |
+| `2026_07_04_000008_create_categories_table.php` | `CreateCategoriesTable` | `categories` |
+| `2026_07_04_000009_create_users_table.php` | `CreateUsersTable` | `users` |
+| `2026_07_04_000010_create_socials_table.php` | `CreateSocialsTable` | `socials` |
+| `2026_07_04_000011_create_posts_table.php` | `CreatePostsTable` | `posts` |
+| `2026_07_04_000012_create_themes_table.php` | `CreateThemesTable` | `themes` |
+| `2026_07_04_000013_create_members_table.php` | `CreateMembersTable` | `members` |
+
+**Seeders** — Fully typed, DTO-driven population system:
+
+| Class | Path | Responsibility |
+|-------|------|----------------|
+| `SeederInterface` | `app/Database/SeederInterface.php` | Contract every seeder must implement |
+| `DatabaseSeeder` | `app/Database/DatabaseSeeder.php` | Orchestrator — truncates tables, calls all seeders in dependency order |
+| **DTOs** | `app/Database/DTOs/` | Immutable `readonly` value objects — one per table |
+| **Seeders** | `app/Database/Seeders/` | Concrete implementations using DTOs + PDO prepared statements |
+
+Seeder execution order (respects FK constraints):
+`categories → users → members → posts → pages → sliders → settings → socials → footers → themes → contacts`
 
 ---
 
 ## 📂 Directory Structure
 
 ```text
-├── admin/                  # Fully featured CMS dashboard
-│   ├── index.php           # Admin Dashboard landing
-│   ├── login.php           # Admin authentication
-│   └── post_list.php       # Post catalog & action handlers
-├── app/                    # OOP Core & Business Logic
-│   ├── Core/               # Singleton DB & Session handling
-│   ├── Helpers/            # Helper utilities (formatting, escaping)
-│   ├── Models/             # Database-mapped PHP classes
-│   └── bootstrap.php       # App entry bootstrap
-├── config/                 # Static configuration loader
-├── css/                    # Frontend styles
-├── js/                     # Frontend interactive scripts
-├── vendor/                 # Composer vendor packages (e.g. phpdotenv)
-├── .env.example            # Environment configuration template
-├── composer.json           # Composer configuration & scripts
-└── db_blg.sql              # Database structure & default content seeding
+├── admin/                          # Fully featured CMS dashboard
+│   ├── index.php                   # Admin dashboard landing
+│   ├── login.php                   # Admin authentication
+│   └── post_list.php               # Post catalog & action handlers
+├── app/                            # OOP core & business logic
+│   ├── Core/                       # Singleton DB & session handling
+│   │   ├── Database.php
+│   │   └── Session.php
+│   ├── Database/                   # Database layer
+│   │   ├── DTOs/                   # Immutable value objects (one per table)
+│   │   │   └── CategoryDTO.php · ContactDTO.php · ... (11 total)
+│   │   ├── Migrations/             # Doctrine migration files (Laravel-style names)
+│   │   │   ├── 2026_07_04_000003_create_contacts_table.php
+│   │   │   ├── 2026_07_04_000006_create_settings_table.php
+│   │   │   └── ... (11 migrations total)
+│   │   ├── Seeders/                # Concrete seeder implementations
+│   │   │   └── CategorySeeder.php · UserSeeder.php · ... (11 total)
+│   │   ├── DatabaseSeeder.php      # Master seeder orchestrator
+│   │   └── SeederInterface.php     # Seeder contract
+│   ├── Helpers/                    # Utility helpers
+│   │   ├── Debug.php               # dump() — dev-only debug helper
+│   │   └── Format.php              # Content sanitization & formatting
+│   ├── Models/                     # Database-mapped PHP classes
+│   │   └── Post.php · User.php · Category.php · ... (7 total)
+│   └── bootstrap.php               # App entry bootstrap
+├── bin/                            # CLI entry points
+│   ├── make-migration              # Generate Laravel-style migration file
+│   ├── make-model                  # Generate Model class (+ optional migration)
+│   └── migrate                     # Doctrine Migrations CLI runner
+├── config/                         # Static configuration loader
+├── css/                            # Frontend styles
+├── js/                             # Frontend scripts
+├── vendor/                         # Composer vendor packages
+├── .agents/                        # Agent rules & project conventions
+│   └── AGENTS.md                   # OWASP rules, coding standards
+├── .env                            # Active environment (never commit)
+├── .env.example                    # Environment configuration template
+├── composer.json                   # Composer config & script shortcuts
+├── db-seed.php                     # CLI entry point — runs DatabaseSeeder
+└── migrations.php                  # Doctrine Migrations config (pure PHP array)
 ```
 
 ---
@@ -101,56 +180,135 @@ Models map domain logic and database operations, keeping script files clean:
 
 ### Steps
 
-1.  **Clone the Repository**
-    ```bash
-    git clone https://github.com/mhannan-dev/php-blog.git
-    cd php-blog
-    ```
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/mhannan-dev/php-blog.git
+   cd php-blog
+   ```
 
-2.  **Install Dependencies**
-    ```bash
-    composer install
-    ```
+2. **Install Dependencies**
+   ```bash
+   composer install
+   ```
 
-3.  **Setup the Database**
-    *   Create a MySQL database (e.g., `blog_cms`).
-    *   Import the database schema and seed data using the provided `db_blg.sql` file:
-        ```bash
-        mysql -u your_username -p blog_cms < db_blg.sql
-        ```
+3. **Configure Environment Variables**
+   ```bash
+   cp .env.example .env
+   ```
+   Open `.env` and fill in your credentials:
+   ```ini
+   DB_HOST=localhost
+   DB_USER=root
+   DB_PASS=your_db_password
+   DB_NAME=blg
+   APP_ENV=development
 
-4.  **Configure Environment Variables**
-    *   Copy the `.env.example` file to `.env`:
-        ```bash
-        cp .env.example .env
-        ```
-    *   Open `.env` and fill in your database credentials and configurations:
-        ```ini
-        DB_HOST=localhost
-        DB_USER=root
-        DB_PASS=your_db_password
-        DB_NAME=blog_cms
-        APP_ENV=development
-        
-        TITLE="MH CMS"
-        META_DESC="A blog developed by Muhammad Hannan using PHP & MySQL."
-        KEYWORDS="PHP, Laravel, Vue JS, WordPress, plugin"
-        ```
+   TITLE="MH CMS"
+   META_DESC="A blog developed by Muhammad Hannan using PHP & MySQL."
+   KEYWORDS="PHP, Laravel, Vue JS, WordPress, plugin"
+   ```
 
-5.  **Start the Local Development Server**
-    You can spin up the built-in PHP local web server using the configured Composer script:
-    ```bash
-    composer start
-    ```
-    The application will now be running at **`http://localhost:8888`**.
+4. **Create the Database Schema (Migrations)**
+   ```bash
+   composer migrate
+   ```
+   This runs all Doctrine Migrations in order, creating all 11 application tables.
+
+5. **Seed the Database**
+   ```bash
+   composer db:seed
+   ```
+   Runs the full `DatabaseSeeder` pipeline — truncates all tables and populates them with sample data using typed DTOs and PDO prepared statements.
+
+6. **Start the Local Development Server**
+   ```bash
+   composer start
+   ```
+   App runs at **`http://localhost:8888`**.
+
+---
+
+## ⌨️ Composer CLI Scripts
+
+All project operations are available as Composer shortcuts:
+
+### 🗄️ Migrations
+
+| Command | Description |
+|---------|-------------|
+| `composer migrate` | Apply all pending migrations |
+| `composer migrate:status` | Show applied / pending migration versions |
+| `composer migrate:gen` | Generate a blank Doctrine migration class |
+| `composer migrate:diff` | Generate migration from schema diff |
+| `composer migrate:down` | Roll back all applied migrations |
+
+### 🏗️ Code Generators
+
+| Command | Description |
+|---------|-------------|
+| `composer make:migration create_posts_table` | Generate a Laravel-style migration file |
+| `composer make:model Post` | Generate a Model class |
+| `composer make:model Post -- -m` | Generate a Model **and** its migration |
+
+**Migration naming convention** (identical to Laravel):
+
+```
+YYYY_MM_DD_HHMMSS_action_description.php  →  class ActionDescription
+```
+
+Examples:
+```bash
+composer make:migration create_orders_table         # → CreateOrdersTable
+composer make:migration add_published_at_to_posts   # → AddPublishedAtToPosts
+composer make:migration drop_themes_table           # → DropThemesTable
+```
+
+**Model name → table name** (auto-derived):
+
+| Model name | Table |
+|------------|-------|
+| `Post` | `posts` |
+| `Category` | `categories` |
+| `ProductCategory` | `product_categories` |
+
+### 🌱 Seeding
+
+| Command | Description |
+|---------|-------------|
+| `composer db:seed` | Truncate all tables and re-seed with sample data |
+
+### 🚀 Development
+
+| Command | Description |
+|---------|-------------|
+| `composer start` | Start PHP built-in server on `localhost:8888` |
+
+---
+
+## 🔐 Security Practices
+
+This project follows the **OWASP Top 10** guidelines as hard requirements. Key practices enforced throughout the codebase:
+
+| # | Risk | Mitigation |
+|---|------|------------|
+| A01 | Broken Access Control | Server-side role checks on every admin route; least-privilege model |
+| A02 | Cryptographic Failures | `password_hash()` / `password_verify()` (bcrypt); secrets in `.env` only |
+| A03 | Injection | PDO prepared statements with bound parameters; `htmlspecialchars()` on all output |
+| A04 | Insecure Design | Defense-in-depth; rate limiting on login and contact form |
+| A05 | Security Misconfiguration | `display_errors=Off` in production; `.env`/`.git` denied via `.htaccess`; `HttpOnly`+`SameSite` cookies |
+| A06 | Vulnerable Components | MIT-licensed deps only; version-pinned in `composer.json` |
+| A07 | Auth Failures | `session_regenerate_id(true)` on login; account lockout after repeated failures |
+| A08 | Integrity Failures | CSP headers; no unsafe deserialization |
+| A09 | Logging & Monitoring | Auth events logged with timestamp + IP; logs outside webroot |
+| A10 | SSRF | URL allowlist; internal IP ranges blocked for any outbound HTTP |
 
 ---
 
 ## 👨‍💻 Author
 
-**Muhammad Hannan**  
-📧 Email: [mdhannan.info@gmail.com](mailto:mdhannan.info@gmail.com)  
-🌐 Website / GitHub: [@mhannan-dev](https://github.com/mhannan-dev)
+**Muhammad Hannan**
+📧 Email: [mdhannan.info@gmail.com](mailto:mdhannan.info@gmail.com)
+🌐 GitHub: [@mhannan-dev](https://github.com/mhannan-dev)
 
 ---
 

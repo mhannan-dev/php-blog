@@ -1,0 +1,147 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * bin/make-migration — Generate a Laravel-style Doctrine migration file.
+ *
+ * Usage:
+ *   php bin/make-migration create_settings_table
+ *   php bin/make-migration add_published_at_to_posts
+ *   php bin/make-migration drop_themes_table
+ *
+ * Output (example):
+ *   app/Database/Migrations/2026_07_04_063000_create_settings_table.php
+ *   Class: CreateSettingsTable
+ */
+
+declare(strict_types=1);
+
+// ── Validate input ────────────────────────────────────────────────────────────
+if ($argc < 2 || empty(trim($argv[1]))) {
+    fwrite(STDERR, "\n  Usage: php bin/make-migration <migration_name>\n");
+    fwrite(STDERR, "  Example: php bin/make-migration create_settings_table\n\n");
+    exit(1);
+}
+
+$migrationName = strtolower(trim($argv[1]));
+
+// Only allow snake_case alphanumeric names
+if (!preg_match('/^[a-z][a-z0-9_]*$/', $migrationName)) {
+    fwrite(STDERR, "\n  Error: Migration name must be snake_case (e.g. create_settings_table)\n\n");
+    exit(1);
+}
+
+// ── Build names ───────────────────────────────────────────────────────────────
+$timestamp = date('Y_m_d_His');                           // 2026_07_04_063000
+$fileName  = "{$timestamp}_{$migrationName}.php";         // 2026_07_04_063000_create_settings_table.php
+$className = str_replace('_', '', ucwords($migrationName, '_')); // CreateSettingsTable
+
+// ── Destination ───────────────────────────────────────────────────────────────
+$migrationsDir = dirname(__DIR__) . '/app/Database/Migrations';
+$filePath      = $migrationsDir . '/' . $fileName;
+
+if (!is_dir($migrationsDir)) {
+    mkdir($migrationsDir, 0755, true);
+}
+
+if (file_exists($filePath)) {
+    fwrite(STDERR, "\n  Error: Migration already exists: {$fileName}\n\n");
+    exit(1);
+}
+
+// ── Detect intent from name (create / add / drop / alter) ────────────────────
+$upBody   = "        // TODO: implement up()";
+$downBody = "        // TODO: implement down()";
+
+if (preg_match('/^create_(.+)_table$/', $migrationName, $m)) {
+    $table    = $m[1];
+    $upBody   = <<<PHP
+        if (!\$schema->hasTable('{$table}')) {
+            \$t = \$schema->createTable('{$table}');
+            \$t->addColumn('id', 'integer', ['autoincrement' => true, 'unsigned' => true]);
+            // TODO: add columns here
+            \$t->setPrimaryKey(['id']);
+        }
+PHP;
+    $downBody = <<<PHP
+        if (\$schema->hasTable('{$table}')) {
+            \$schema->dropTable('{$table}');
+        }
+PHP;
+} elseif (preg_match('/^add_(.+)_to_(.+)$/', $migrationName, $m)) {
+    $column   = $m[1];
+    $table    = $m[2];
+    $upBody   = <<<PHP
+        \$t = \$schema->getTable('{$table}');
+        if (!\$t->hasColumn('{$column}')) {
+            \$t->addColumn('{$column}', 'string', ['length' => 255, 'notnull' => false, 'default' => null]);
+        }
+PHP;
+    $downBody = <<<PHP
+        \$t = \$schema->getTable('{$table}');
+        if (\$t->hasColumn('{$column}')) {
+            \$t->dropColumn('{$column}');
+        }
+PHP;
+} elseif (preg_match('/^drop_(.+)_table$/', $migrationName, $m)) {
+    $table    = $m[1];
+    $upBody   = <<<PHP
+        if (\$schema->hasTable('{$table}')) {
+            \$schema->dropTable('{$table}');
+        }
+PHP;
+    $downBody = <<<PHP
+        // TODO: recreate '{$table}' table in down()
+PHP;
+}
+
+// ── Stub ──────────────────────────────────────────────────────────────────────
+$stub = <<<PHP
+<?php
+
+/**
+ * Migration: {$className}
+ *
+ * Run:      php bin/migrate migrate
+ * Rollback: php bin/migrate execute --down 'App\\Database\\Migrations\\{$className}'
+ */
+
+declare(strict_types=1);
+
+namespace App\Database\Migrations;
+
+use Doctrine\DBAL\Schema\Schema;
+use Doctrine\Migrations\AbstractMigration;
+
+final class {$className} extends AbstractMigration
+{
+    public function getDescription(): string
+    {
+        return '{$className}';
+    }
+
+    public function up(Schema \$schema): void
+    {
+{$upBody}
+    }
+
+    public function down(Schema \$schema): void
+    {
+{$downBody}
+    }
+}
+PHP;
+
+// ── Write file ────────────────────────────────────────────────────────────────
+file_put_contents($filePath, $stub);
+
+echo "\n";
+echo "  Migration created successfully!\n";
+echo "\n";
+echo "  File:  app/Database/Migrations/{$fileName}\n";
+echo "  Class: App\\Database\\Migrations\\{$className}\n";
+echo "\n";
+echo "  Next steps:\n";
+echo "    1. Edit the file and fill in up() / down()\n";
+echo "    2. php bin/migrate migrate\n";
+echo "\n";
