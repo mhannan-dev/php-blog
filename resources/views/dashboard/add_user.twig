@@ -26,10 +26,10 @@
         <!-- CSRF Token -->
         <input type="hidden" name="csrf_token" value="{{ csrfToken }}">
 
-        {{ form.text('username', 'Username', username|default(''), 'Enter username', true, 'text', 'new-username') }}
-        {{ form.password('password', 'Password', true, 'new-password') }}
+        {{ form.text('username', 'Username', username|default(''), 'Enter username', true, 'text', 'new-username', 'fa-regular fa-user') }}
+        {{ form.password('password', 'Password', true, 'new-password', 'fa-solid fa-lock') }}
         
-        {{ form.select('role', 'User Role', {'0': 'Admin', '1': 'Author', '2': 'Editor'}, '', true, 'user-role') }}
+        {{ form.select('role', 'User Role', {'0': 'Admin', '1': 'Author', '2': 'Editor'}, '', true, 'user-role', 'fa-solid fa-user-shield') }}
 
         <div class="mt-2 flex gap-3">
             {{ btn.primary('Create User', 'submit', 'submit', 'fa-solid fa-user-plus') }}

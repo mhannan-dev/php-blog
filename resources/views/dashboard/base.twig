@@ -152,11 +152,6 @@
                 </button>
                 <ul class="flex flex-col gap-1 text-sm font-medium">
                     <li>
-                        <a href="addpost.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl {{ current_page == 'addpost.php' ? 'text-white bg-white/10' : 'text-slate-350 hover:text-white hover:bg-white/5' }} transition-all duration-200">
-                            <i class="fa-solid fa-plus-circle text-brand-400 text-xs"></i> Add Post
-                        </a>
-                    </li>
-                    <li>
                         <a href="post_list.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl {{ current_page == 'post_list.php' ? 'text-white bg-white/10' : 'text-slate-350 hover:text-white hover:bg-white/5' }} transition-all duration-200">
                             <i class="fa-solid fa-file-invoice text-brand-400 text-xs"></i> Post List
                         </a>
@@ -172,11 +167,6 @@
                 </button>
                 <ul class="flex flex-col gap-1 text-sm font-medium">
                     <li>
-                        <a href="addcat.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl {{ current_page == 'addcat.php' ? 'text-white bg-white/10' : 'text-slate-350 hover:text-white hover:bg-white/5' }} transition-all duration-200">
-                            <i class="fa-solid fa-folder-plus text-brand-400 text-xs"></i> Add Category
-                        </a>
-                    </li>
-                    <li>
                         <a href="catlist.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl {{ current_page == 'catlist.php' ? 'text-white bg-white/10' : 'text-slate-350 hover:text-white hover:bg-white/5' }} transition-all duration-200">
                             <i class="fa-solid fa-folder-tree text-brand-400 text-xs"></i> Category List
                         </a>
@@ -191,13 +181,6 @@
                     <i class="fa-solid fa-chevron-down transition-transform duration-200"></i>
                 </button>
                 <ul class="flex flex-col gap-1 text-sm font-medium">
-                    {% if admin_role == '0' %}
-                        <li>
-                            <a href="add_new_page.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-350 hover:text-white hover:bg-white/5 transition-all duration-200">
-                                <i class="fa-solid fa-file-circle-plus text-brand-400 text-xs"></i> Add New Page
-                            </a>
-                        </li>
-                    {% endif %}
                     {% for p in sidebarPages %}
                         <li>
                             <a href="page.php?page_id={{ p.id }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-350 hover:text-white hover:bg-white/5 transition-all duration-200">
@@ -219,11 +202,6 @@
                 </button>
                 <ul class="flex flex-col gap-1 text-sm font-medium hidden">
                     <li>
-                        <a href="add_slider.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-350 hover:text-white hover:bg-white/5 transition-all duration-200">
-                            <i class="fa-solid fa-image text-brand-400 text-xs"></i> New Slider
-                        </a>
-                    </li>
-                    <li>
                         <a href="slider_list.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-350 hover:text-white hover:bg-white/5 transition-all duration-200">
                             <i class="fa-solid fa-images text-brand-400 text-xs"></i> Slider List
                         </a>
@@ -238,11 +216,6 @@
                     <i class="fa-solid fa-chevron-down transition-transform duration-200"></i>
                 </button>
                 <ul class="flex flex-col gap-1 text-sm font-medium hidden">
-                    <li>
-                        <a href="social_add.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-350 hover:text-white hover:bg-white/5 transition-all duration-200">
-                            <i class="fa-solid fa-share-nodes text-brand-400 text-xs"></i> Add Social Link
-                        </a>
-                    </li>
                     <li>
                         <a href="social_list.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-350 hover:text-white hover:bg-white/5 transition-all duration-200">
                             <i class="fa-solid fa-globe text-brand-400 text-xs"></i> Social Media List

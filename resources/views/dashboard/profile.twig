@@ -26,9 +26,9 @@
         <!-- CSRF Token -->
         <input type="hidden" name="csrf_token" value="{{ csrfToken }}">
 
-        {{ form.text('name', 'Full Name', user.name, '', true, 'text', 'prof-name') }}
-        {{ form.text('username', 'Username', user.username, '', true, 'text', 'prof-username') }}
-        {{ form.text('email', 'Email Address', user.email, '', true, 'email', 'prof-email') }}
+        {{ form.text('name', 'Full Name', user.name, '', true, 'text', 'prof-name', 'fa-regular fa-id-card') }}
+        {{ form.text('username', 'Username', user.username, '', true, 'text', 'prof-username', 'fa-regular fa-user') }}
+        {{ form.text('email', 'Email Address', user.email, '', true, 'email', 'prof-email', 'fa-regular fa-envelope') }}
         {{ form.textarea('details', 'Bio Details', user.details, 'rows-4', false, 'prof-details') }}
 
         <div class="mt-2 flex gap-3">
