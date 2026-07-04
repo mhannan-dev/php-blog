@@ -94,6 +94,86 @@ Models map domain logic and database operations, keeping script files clean:
 
 ### 🗄️ Database Layer (`app/Database/`)
 
+**Entity Relationship Diagram (ERD)**
+
+```mermaid
+erDiagram
+    users {
+        int id PK
+        string name
+        string username
+        string email
+        string password
+        text details
+        int role
+    }
+    categories {
+        int id PK
+        string name
+    }
+    posts {
+        int id PK
+        int cat FK "-> categories.id"
+        string title
+        text body
+        string image
+        string author
+        string tags
+        datetime date
+        int userid FK "-> users.id"
+    }
+    members {
+        int id PK
+        string name
+        string email
+        string username
+        string password
+    }
+    pages {
+        int id PK
+        string name
+        text body
+    }
+    contacts {
+        int id PK
+        string fname
+        string lname
+        string email
+        text msg
+        smallint status
+        datetime created
+    }
+    settings {
+        int id PK
+        string logo
+        string title
+        string slogan
+    }
+    sliders {
+        int id PK
+        string title
+        string image
+        datetime timestamp
+    }
+    socials {
+        int id PK
+        string fb
+        string tw
+        string ln
+    }
+    footers {
+        int id PK
+        string note
+    }
+    themes {
+        int id PK
+        string theme
+    }
+
+    users ||--o{ posts : creates
+    categories ||--o{ posts : contains
+```
+
 **Migrations** — Schema versioning via Doctrine Migrations 3.x:
 
 | File | Class | Creates |
