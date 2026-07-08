@@ -3,17 +3,17 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
-use Twig\Environment;
-use Page;
+use App\Contracts\PageRepositoryInterface;
+use App\Security\InputValidator;
 use Session;
 use Format;
-use mysqli_result;
+use Twig\Environment;
 
 class PageController extends BaseController
 {
-    private Page $pageModel;
+    private PageRepositoryInterface $pageModel;
 
-    public function __construct(Environment $twig, Page $pageModel)
+    public function __construct(Environment $twig, PageRepositoryInterface $pageModel)
     {
         parent::__construct($twig);
         $this->pageModel = $pageModel;
@@ -23,14 +23,8 @@ class PageController extends BaseController
     {
         $this->requireAdmin();
 
-        $pagesResult = $this->pageModel->getAll();
-        $pagesArray = [];
-        if ($pagesResult && $pagesResult instanceof mysqli_result) {
-            $pagesArray = $pagesResult->fetch_all(MYSQLI_ASSOC) ?: [];
-        }
-
         $this->render('dashboard/page_list.twig', [
-            'pages' => $pagesArray
+            'pages' => $this->pageModel->getAll()
         ]);
     }
 
@@ -42,24 +36,37 @@ class PageController extends BaseController
         $success = '';
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $csrfToken = $_POST['csrf_token'] ?? '';
-            if (!Session::checkCsrfToken($csrfToken)) {
-                $error = 'Security check failed. Please refresh the page.';
-            } else {
-                $name = trim($_POST['name'] ?? '');
-                $body = trim($_POST['body'] ?? '');
+            if (!$this->validateCsrf($_POST, $error)) {
+                $this->render('dashboard/add_new_page.twig', [
+                    'error'     => $error,
+                    'success'   => $success,
+                    'csrfToken' => Session::getCsrfToken(),
+                    'page_data' => $_POST
+                ]);
+                return;
+            }
 
-                if ($name === '' || $body === '') {
-                    $error = 'Fields must not be empty.';
+            $name = $this->getRequestBody('name');
+            $body = $this->getRequestBody('body');
+
+            $validator = new InputValidator();
+            $validator
+                ->required('name', $name, 'Page name')
+                ->required('body', $body, 'Body');
+
+            if (!$validator->passes()) {
+                $error = $validator->firstError();
+            } else {
+                $slug     = Format::slugify($name);
+                $inserted = $this->pageModel->create([
+                    'name' => $name,
+                    'slug' => $slug,
+                    'body' => $body
+                ]);
+                if ($inserted) {
+                    $this->redirect('page_list.php');
                 } else {
-                    $slug     = Format::slugify($name);
-                    $inserted = $this->pageModel->create($name, $slug, $body);
-                    if ($inserted) {
-                        header('Location: page_list.php');
-                        exit();
-                    } else {
-                        $error = 'Page Not Inserted!';
-                    }
+                    $error = 'Page Not Inserted!';
                 }
             }
         }
@@ -76,54 +83,64 @@ class PageController extends BaseController
     {
         $this->requireAdmin();
 
-        if (!isset($_GET['page_id']) || (int) $_GET['page_id'] <= 0) {
-            header('Location: index.php');
-            exit();
+        $pageId = $this->getIntParam('page_id');
+        if ($pageId <= 0) {
+            $this->redirect('index.php');
         }
 
-        $pageId = (int) $_GET['page_id'];
         $error   = '';
         $success = '';
 
-        if (isset($_GET['delete_page'])) {
-            $delId = (int) $_GET['delete_page'];
-            if ($delId === $pageId) {
-                $deleted = $this->pageModel->delete($delId);
-                if ($deleted) {
-                    header('Location: page_list.php');
-                    exit();
-                } else {
-                    $error = 'Failed to delete page.';
-                }
+        $delId = $this->getIntParam('delete_page');
+        if ($delId === $pageId) {
+            $deleted = $this->pageModel->delete($delId);
+            if ($deleted) {
+                $this->redirect('page_list.php');
+            } else {
+                $error = 'Failed to delete page.';
             }
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $csrfToken = $_POST['csrf_token'] ?? '';
-            if (!Session::checkCsrfToken($csrfToken)) {
-                $error = 'Security check failed. Please refresh the page.';
-            } else {
-                $name = trim($_POST['name'] ?? '');
-                $body = trim($_POST['body'] ?? '');
+            if (!$this->validateCsrf($_POST, $error)) {
+                $pageData = $this->pageModel->getById($pageId);
+                $this->render('dashboard/page.twig', [
+                    'error'     => $error,
+                    'success'   => $success,
+                    'csrfToken' => Session::getCsrfToken(),
+                    'pageData'  => $pageData
+                ]);
+                return;
+            }
 
-                if ($name === '' || $body === '') {
-                    $error = 'Fields must not be empty.';
+            $name = $this->getRequestBody('name');
+            $body = $this->getRequestBody('body');
+
+            $validator = new InputValidator();
+            $validator
+                ->required('name', $name, 'Page name')
+                ->required('body', $body, 'Body');
+
+            if (!$validator->passes()) {
+                $error = $validator->firstError();
+            } else {
+                $slug    = Format::slugify($name);
+                $updated = $this->pageModel->update($pageId, [
+                    'name' => $name,
+                    'slug' => $slug,
+                    'body' => $body
+                ]);
+                if ($updated) {
+                    $success = 'Page Updated Successfully.';
                 } else {
-                    $slug = Format::slugify($name);
-                    $updated = $this->pageModel->update($pageId, $name, $slug, $body);
-                    if ($updated) {
-                        $success = 'Page Updated Successfully.';
-                    } else {
-                        $error = 'Page Not Updated!';
-                    }
+                    $error = 'Page Not Updated!';
                 }
             }
         }
 
         $pageData = $this->pageModel->getById($pageId);
         if (!$pageData) {
-            header('Location: index.php');
-            exit();
+            $this->redirect('index.php');
         }
 
         $this->render('dashboard/page.twig', [

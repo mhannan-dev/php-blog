@@ -3,19 +3,22 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
-use Twig\Environment;
-use Site;
+use App\Contracts\SiteRepositoryInterface;
+use App\Security\InputValidator;
+use App\Services\FileUploader;
 use Session;
-use mysqli_result;
+use Twig\Environment;
 
 class SliderController extends BaseController
 {
-    private Site $siteModel;
+    private SiteRepositoryInterface $siteModel;
+    private FileUploader $uploader;
 
-    public function __construct(Environment $twig, Site $siteModel)
+    public function __construct(Environment $twig, SiteRepositoryInterface $siteModel)
     {
         parent::__construct($twig);
         $this->siteModel = $siteModel;
+        $this->uploader  = new FileUploader(allowedExtensions: ['jpg', 'jpeg', 'png', 'gif'], uploadDir: __DIR__ . '/../../../admin/');
     }
 
     public function list(): void
@@ -25,28 +28,20 @@ class SliderController extends BaseController
         $error   = '';
         $success = '';
 
-        if (isset($_GET['delete_slider'])) {
-            $delId = (int) $_GET['delete_slider'];
-            if ($delId > 0) {
-                $deleted = $this->siteModel->deleteSlider($delId);
-                if ($deleted) {
-                    $success = 'Slider deleted successfully.';
-                } else {
-                    $error = 'Failed to delete slider.';
-                }
+        $delId = $this->getIntParam('delete_slider');
+        if ($delId > 0) {
+            $deleted = $this->siteModel->deleteSlider($delId);
+            if ($deleted) {
+                $success = 'Slider deleted successfully.';
+            } else {
+                $error = 'Failed to delete slider.';
             }
-        }
-
-        $slidersResult = $this->siteModel->getSliders(20);
-        $sliders = [];
-        if ($slidersResult && $slidersResult instanceof mysqli_result) {
-            $sliders = $slidersResult->fetch_all(MYSQLI_ASSOC) ?: [];
         }
 
         $this->render('dashboard/slider_list.twig', [
             'error'   => $error,
             'success' => $success,
-            'sliders' => $sliders
+            'sliders' => $this->siteModel->getSliders(20)
         ]);
     }
 
@@ -58,42 +53,36 @@ class SliderController extends BaseController
         $success = '';
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $csrfToken = $_POST['csrf_token'] ?? '';
-            if (!Session::checkCsrfToken($csrfToken)) {
-                $error = 'Security check failed. Please refresh the page.';
+            if (!$this->validateCsrf($_POST, $error)) {
+                $this->render('dashboard/add_slider.twig', [
+                    'error'       => $error,
+                    'success'     => $success,
+                    'csrfToken'   => Session::getCsrfToken(),
+                    'slider_data' => $_POST
+                ]);
+                return;
+            }
+
+            $title       = $this->getRequestBody('title');
+            $description = $this->getRequestBody('description');
+
+            $validator = new InputValidator();
+            $validator->required('title', $title, 'Title');
+
+            if (!$validator->passes()) {
+                $error = $validator->firstError();
             } else {
-                $title       = trim($_POST['title']       ?? '');
-                $description = trim($_POST['description'] ?? '');
-
-                $allowedExts = ['jpg', 'jpeg', 'png', 'gif'];
-                $file        = $_FILES['image'] ?? null;
-                $fileName    = $file['name']     ?? '';
-                $fileSize    = $file['size']     ?? 0;
-                $fileTmp     = $file['tmp_name'] ?? '';
-                $fileExt     = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-
-                if ($title === '' || $fileName === '') {
-                    $error = 'Title and Image are required.';
-                } elseif ($fileSize > 1_048_576) {
-                    $error = 'Image size must be less than 1 MB.';
-                } elseif (!in_array($fileExt, $allowedExts, true)) {
-                    $error = 'Allowed image types: ' . implode(', ', $allowedExts) . '.';
+                $fileError = $this->uploader->validate($_FILES['image'] ?? []);
+                if ($fileError !== null) {
+                    $error = $fileError;
                 } else {
-                    $uniqueName   = bin2hex(random_bytes(8)) . '.' . $fileExt;
-                    $uploadedPath = 'upload/slider/' . $uniqueName;
-
-                    if (!is_dir(__DIR__ . '/../../../admin/upload/slider')) {
-                        mkdir(__DIR__ . '/../../../admin/upload/slider', 0777, true);
-                    }
-
-                    if (!move_uploaded_file($fileTmp, __DIR__ . '/../../../admin/' . $uploadedPath)) {
-                        $error = 'Failed to upload image. Check folder permissions.';
+                    $result = $this->uploader->upload($_FILES['image'] ?? [], 'slider');
+                    if (!$result['success']) {
+                        $error = $result['error'];
                     } else {
-                        $inserted = $this->siteModel->createSlider($title, $description, $uploadedPath);
-
+                        $inserted = $this->siteModel->createSlider($title, $description, $result['path']);
                         if ($inserted) {
-                            header('Location: slider_list.php');
-                            exit();
+                            $this->redirect('slider_list.php');
                         } else {
                             $error = 'Failed to save the slider. Please try again.';
                         }
@@ -114,66 +103,59 @@ class SliderController extends BaseController
     {
         $this->requireAdmin();
 
-        if (!isset($_GET['slider_id']) || (int) $_GET['slider_id'] <= 0) {
-            header('Location: slider_list.php');
-            exit();
+        $sliderId = $this->getIntParam('slider_id');
+        if ($sliderId <= 0) {
+            $this->redirect('slider_list.php');
         }
 
-        $sliderId = (int) $_GET['slider_id'];
         $error   = '';
         $success = '';
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $csrfToken = $_POST['csrf_token'] ?? '';
-            if (!Session::checkCsrfToken($csrfToken)) {
-                $error = 'Security check failed. Please refresh the page.';
+            if (!$this->validateCsrf($_POST, $error)) {
+                $sliderData = $this->siteModel->getSliderById($sliderId);
+                $this->render('dashboard/edit_slider.twig', [
+                    'error'      => $error,
+                    'success'    => $success,
+                    'csrfToken'  => Session::getCsrfToken(),
+                    'sliderData' => $sliderData
+                ]);
+                return;
+            }
+
+            $title       = $this->getRequestBody('title');
+            $description = $this->getRequestBody('description');
+
+            $validator = new InputValidator();
+            $validator->required('title', $title, 'Title');
+
+            if (!$validator->passes()) {
+                $error = $validator->firstError();
             } else {
-                $title       = trim($_POST['title']       ?? '');
-                $description = trim($_POST['description'] ?? '');
-
-                $allowedExts = ['jpg', 'jpeg', 'png', 'gif'];
-                $file        = $_FILES['image'] ?? null;
-                $fileName    = $file['name']     ?? '';
-                $fileSize    = $file['size']     ?? 0;
-                $fileTmp     = $file['tmp_name'] ?? '';
-                $fileExt     = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-
-                if ($title === '') {
-                    $error = 'Title is required.';
-                } else {
-                    if (!empty($fileName)) {
-                        if ($fileSize > 1_048_576) {
-                            $error = 'Image size must be less than 1 MB.';
-                        } elseif (!in_array($fileExt, $allowedExts, true)) {
-                            $error = 'Allowed image types: ' . implode(', ', $allowedExts) . '.';
-                        } else {
-                            $uniqueName   = bin2hex(random_bytes(8)) . '.' . $fileExt;
-                            $uploadedPath = 'upload/slider/' . $uniqueName;
-
-                            if (!is_dir(__DIR__ . '/../../../admin/upload/slider')) {
-                                mkdir(__DIR__ . '/../../../admin/upload/slider', 0777, true);
-                            }
-
-                            if (!move_uploaded_file($fileTmp, __DIR__ . '/../../../admin/' . $uploadedPath)) {
-                                $error = 'Failed to upload image.';
-                            } else {
-                                $updated = $this->siteModel->updateSlider($sliderId, $title, $description, $uploadedPath);
-                                if ($updated) {
-                                    header('Location: slider_list.php');
-                                    exit();
-                                } else {
-                                    $error = 'Failed to update slider.';
-                                }
-                            }
-                        }
+                $file = $_FILES['image'] ?? null;
+                if ($file && !empty($file['name'])) {
+                    $fileError = $this->uploader->validate($file);
+                    if ($fileError !== null) {
+                        $error = $fileError;
                     } else {
-                        $updated = $this->siteModel->updateSlider($sliderId, $title, $description, '');
-                        if ($updated) {
-                            header('Location: slider_list.php');
-                            exit();
+                        $result = $this->uploader->upload($file, 'slider');
+                        if (!$result['success']) {
+                            $error = $result['error'];
                         } else {
-                            $error = 'Failed to update slider.';
+                            $updated = $this->siteModel->updateSlider($sliderId, $title, $result['path']);
+                            if ($updated) {
+                                $this->redirect('slider_list.php');
+                            } else {
+                                $error = 'Failed to update slider.';
+                            }
                         }
+                    }
+                } else {
+                    $updated = $this->siteModel->updateSlider($sliderId, $title, '');
+                    if ($updated) {
+                        $this->redirect('slider_list.php');
+                    } else {
+                        $error = 'Failed to update slider.';
                     }
                 }
             }
@@ -181,8 +163,7 @@ class SliderController extends BaseController
 
         $sliderData = $this->siteModel->getSliderById($sliderId);
         if (!$sliderData) {
-            header('Location: slider_list.php');
-            exit();
+            $this->redirect('slider_list.php');
         }
 
         $this->render('dashboard/edit_slider.twig', [

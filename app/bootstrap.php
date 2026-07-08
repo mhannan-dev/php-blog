@@ -37,13 +37,36 @@ Session::init();
 
 $db = Database::getInstance();
 
-// ─── Model Instances ───────────────────────────────────────────────────────
-$post     = $postModel     = new Post($db);
-$category = $categoryModel = new Category($db);
-$page     = $pageModel     = new Page($db);
-$user     = $userModel     = new User($db);
-$contact  = $contactModel  = new Contact($db);
-$site     = $siteModel     = new Site($db);
+// ─── Service Container ─────────────────────────────────────────────────────
+$container = new \App\Core\Container();
+
+// Register contracts → concrete implementations
+$container->singleton(\App\Contracts\PostRepositoryInterface::class, function () use ($db) {
+    return new Post($db);
+});
+$container->singleton(\App\Contracts\CategoryRepositoryInterface::class, function () use ($db) {
+    return new Category($db);
+});
+$container->singleton(\App\Contracts\PageRepositoryInterface::class, function () use ($db) {
+    return new Page($db);
+});
+$container->singleton(\App\Contracts\UserRepositoryInterface::class, function () use ($db) {
+    return new User($db);
+});
+$container->singleton(\App\Contracts\ContactRepositoryInterface::class, function () use ($db) {
+    return new Contact($db);
+});
+$container->singleton(\App\Contracts\SiteRepositoryInterface::class, function () use ($db) {
+    return new Site($db);
+});
+
+// ─── Model Instances (backward-compatible aliases) ─────────────────────────
+$post     = $postModel     = $container->get(\App\Contracts\PostRepositoryInterface::class);
+$category = $categoryModel = $container->get(\App\Contracts\CategoryRepositoryInterface::class);
+$page     = $pageModel     = $container->get(\App\Contracts\PageRepositoryInterface::class);
+$user     = $userModel     = $container->get(\App\Contracts\UserRepositoryInterface::class);
+$contact  = $contactModel  = $container->get(\App\Contracts\ContactRepositoryInterface::class);
+$site     = $siteModel     = $container->get(\App\Contracts\SiteRepositoryInterface::class);
 
 // ─── Twig Setup ────────────────────────────────────────────────────────────
 $twig = null;
@@ -53,14 +76,6 @@ if (class_exists('Twig\Environment')) {
         'cache' => false,
         'debug' => ($_ENV['APP_ENV'] ?? 'production') === 'development',
     ]);
-
-    // ─── Helper: Convert mysqli_result → plain array ────────────────────────
-    $toArray = function ($result): array {
-        if (!$result || !($result instanceof mysqli_result)) {
-            return [];
-        }
-        return $result->fetch_all(MYSQLI_ASSOC) ?: [];
-    };
 
     // ─── Site Info ──────────────────────────────────────────────────────────
     $siteInfo = $siteModel->getInfo();
@@ -74,15 +89,13 @@ if (class_exists('Twig\Environment')) {
     $twig->addGlobal('footerNote',  $siteModel->getFooterNote());
 
     // ─── Navigation / Sidebar globals (as plain arrays) ─────────────────────
-    $allPages = $toArray($pageModel->getAll());
-    $allCats  = $toArray($categoryModel->getAll());
-    $twig->addGlobal('navPages',     $allPages);
-    $twig->addGlobal('navCats',      $allCats);
-    $twig->addGlobal('sidebarCats',  $allCats);
-    $twig->addGlobal('sidebarPosts', $toArray($postModel->getLatest(5)));
-    $twig->addGlobal('sidebarPages', $allPages);
-    $twig->addGlobal('footerCats',   $allCats);
-    $twig->addGlobal('footerPages',  $allPages);
+    $twig->addGlobal('navPages',     $pageModel->getAll());
+    $twig->addGlobal('navCats',      $categoryModel->getAll());
+    $twig->addGlobal('sidebarCats',  $categoryModel->getAll());
+    $twig->addGlobal('sidebarPosts', $postModel->getLatest(5));
+    $twig->addGlobal('sidebarPages', $pageModel->getAll());
+    $twig->addGlobal('footerCats',   $categoryModel->getAll());
+    $twig->addGlobal('footerPages',  $pageModel->getAll());
 
     // ─── Request globals ─────────────────────────────────────────────────────
     $twig->addGlobal('current_page', basename($_SERVER['PHP_SELF']));
@@ -93,6 +106,7 @@ if (class_exists('Twig\Environment')) {
     // ─── Admin globals ───────────────────────────────────────────────────────
     $twig->addGlobal('admin_username', Session::get('userName'));
     $twig->addGlobal('admin_role',     Session::get('userRole'));
+    $twig->addGlobal('csrf_token',     Session::getCsrfToken());
 
     // ─── Base URL (always points to the project web root) ───────────────────
     $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));

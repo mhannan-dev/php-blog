@@ -3,16 +3,16 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
-use Twig\Environment;
-use Site;
+use App\Contracts\SiteRepositoryInterface;
+use App\Security\InputValidator;
 use Session;
-use mysqli_result;
+use Twig\Environment;
 
 class SocialController extends BaseController
 {
-    private Site $siteModel;
+    private SiteRepositoryInterface $siteModel;
 
-    public function __construct(Environment $twig, Site $siteModel)
+    public function __construct(Environment $twig, SiteRepositoryInterface $siteModel)
     {
         parent::__construct($twig);
         $this->siteModel = $siteModel;
@@ -25,28 +25,20 @@ class SocialController extends BaseController
         $error   = '';
         $success = '';
 
-        if (isset($_GET['del_social'])) {
-            $delId = (int) $_GET['del_social'];
-            if ($delId > 0) {
-                $deleted = $this->siteModel->deleteSocial($delId);
-                if ($deleted) {
-                    $success = 'Social entry deleted successfully.';
-                } else {
-                    $error = 'Failed to delete social entry.';
-                }
+        $delId = $this->getIntParam('del_social');
+        if ($delId > 0) {
+            $deleted = $this->siteModel->deleteSocial($delId);
+            if ($deleted) {
+                $success = 'Social entry deleted successfully.';
+            } else {
+                $error = 'Failed to delete social entry.';
             }
-        }
-
-        $socialsResult = $this->siteModel->getAllSocial();
-        $socials = [];
-        if ($socialsResult && $socialsResult instanceof mysqli_result) {
-            $socials = $socialsResult->fetch_all(MYSQLI_ASSOC) ?: [];
         }
 
         $this->render('dashboard/social_list.twig', [
             'error'   => $error,
             'success' => $success,
-            'socials' => $socials
+            'socials' => $this->siteModel->getAllSocial()
         ]);
     }
 
@@ -58,25 +50,35 @@ class SocialController extends BaseController
         $success = '';
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $csrfToken = $_POST['csrf_token'] ?? '';
-            if (!Session::checkCsrfToken($csrfToken)) {
-                $error = 'Security check failed. Please refresh the page.';
+            if (!$this->validateCsrf($_POST, $error)) {
+                $this->render('dashboard/social_add.twig', [
+                    'error'       => $error,
+                    'success'     => $success,
+                    'csrfToken'   => Session::getCsrfToken(),
+                    'social_data' => $_POST
+                ]);
+                return;
+            }
+
+            $platform = $this->getRequestBody('platform');
+            $icon     = $this->getRequestBody('icon');
+            $link     = $this->getRequestBody('link');
+
+            $validator = new InputValidator();
+            $validator
+                ->required('platform', $platform, 'Platform')
+                ->required('icon', $icon, 'Icon')
+                ->required('link', $link, 'Link')
+                ->url('link', $link);
+
+            if (!$validator->passes()) {
+                $error = $validator->firstError();
             } else {
-                $platform = trim($_POST['platform'] ?? '');
-                $icon     = trim($_POST['icon']     ?? '');
-                $link     = trim($_POST['link']     ?? '');
-
-                if ($platform === '' || $icon === '' || $link === '') {
-                    $error = 'All fields are required.';
+                $inserted = $this->siteModel->createSocial($platform, $icon, $link);
+                if ($inserted) {
+                    $this->redirect('social_list.php');
                 } else {
-                    $inserted = $this->siteModel->createSocial($platform, $icon, $link);
-
-                    if ($inserted) {
-                        header('Location: social_list.php');
-                        exit();
-                    } else {
-                        $error = 'Failed to add social link. Please try again.';
-                    }
+                    $error = 'Failed to add social link. Please try again.';
                 }
             }
         }
@@ -93,42 +95,52 @@ class SocialController extends BaseController
     {
         $this->requireAdmin();
 
-        if (!isset($_GET['social_id']) || (int) $_GET['social_id'] <= 0) {
-            header('Location: social_list.php');
-            exit();
+        $socialId = $this->getIntParam('social_id');
+        if ($socialId <= 0) {
+            $this->redirect('social_list.php');
         }
 
-        $socialId = (int) $_GET['social_id'];
         $error   = '';
         $success = '';
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $csrfToken = $_POST['csrf_token'] ?? '';
-            if (!Session::checkCsrfToken($csrfToken)) {
-                $error = 'Security check failed. Please refresh the page.';
-            } else {
-                $platform = trim($_POST['platform'] ?? '');
-                $icon     = trim($_POST['icon']     ?? '');
-                $link     = trim($_POST['link']     ?? '');
+            if (!$this->validateCsrf($_POST, $error)) {
+                $socialData = $this->siteModel->getSocialById($socialId);
+                $this->render('dashboard/social_edit.twig', [
+                    'error'      => $error,
+                    'success'    => $success,
+                    'csrfToken'  => Session::getCsrfToken(),
+                    'socialData' => $socialData
+                ]);
+                return;
+            }
 
-                if ($platform === '' || $icon === '' || $link === '') {
-                    $error = 'All fields are required.';
+            $platform = $this->getRequestBody('platform');
+            $icon     = $this->getRequestBody('icon');
+            $link     = $this->getRequestBody('link');
+
+            $validator = new InputValidator();
+            $validator
+                ->required('platform', $platform, 'Platform')
+                ->required('icon', $icon, 'Icon')
+                ->required('link', $link, 'Link')
+                ->url('link', $link);
+
+            if (!$validator->passes()) {
+                $error = $validator->firstError();
+            } else {
+                $updated = $this->siteModel->updateSocial($socialId, $platform, $icon, $link);
+                if ($updated) {
+                    $this->redirect('social_list.php');
                 } else {
-                    $updated = $this->siteModel->updateSocial($socialId, $platform, $icon, $link);
-                    if ($updated) {
-                        header('Location: social_list.php');
-                        exit();
-                    } else {
-                        $error = 'Failed to update social entry. Please try again.';
-                    }
+                    $error = 'Failed to update social entry. Please try again.';
                 }
             }
         }
 
         $socialData = $this->siteModel->getSocialById($socialId);
         if (!$socialData) {
-            header('Location: social_list.php');
-            exit();
+            $this->redirect('social_list.php');
         }
 
         $this->render('dashboard/social_edit.twig', [

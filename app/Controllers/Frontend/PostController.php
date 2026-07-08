@@ -3,15 +3,14 @@
 namespace App\Controllers\Frontend;
 
 use App\Controllers\BaseController;
+use App\Contracts\PostRepositoryInterface;
 use Twig\Environment;
-use Post;
-use mysqli_result;
 
 class PostController extends BaseController
 {
-    private Post $postModel;
+    private PostRepositoryInterface $postModel;
 
-    public function __construct(Environment $twig, Post $postModel)
+    public function __construct(Environment $twig, PostRepositoryInterface $postModel)
     {
         parent::__construct($twig);
         $this->postModel = $postModel;
@@ -19,29 +18,25 @@ class PostController extends BaseController
 
     public function show(): void
     {
-        if (!isset($_GET['slug']) || empty($_GET['slug'])) {
-            header('Location: index.php');
-            exit();
+        $postSlug = $this->getStringParam('slug');
+        if ($postSlug === '') {
+            $this->redirect('index.php');
         }
 
-        $postSlug = $_GET['slug'];
-        $post     = $this->postModel->getBySlug($postSlug);
-
+        $post = $this->postModel->getBySlug($postSlug);
         if (!$post) {
-            header('Location: 404.php');
-            exit();
+            $this->redirect('404.php');
         }
 
-        // Fetch related posts from the same category
-        $relatedPostsResult = $this->postModel->getRelated((int) ($post['category_id'] ?? 0), (int) $post['id'], 3);
-        $relatedPostsArray  = [];
-        if ($relatedPostsResult && $relatedPostsResult instanceof mysqli_result) {
-            $relatedPostsArray = $relatedPostsResult->fetch_all(MYSQLI_ASSOC) ?: [];
-        }
+        $relatedPosts = $this->postModel->getRelated(
+            (int) ($post['category_id'] ?? 0),
+            (int) $post['id'],
+            3
+        );
 
         $this->render('frontend/post.twig', [
             'post'         => $post,
-            'relatedPosts' => $relatedPostsArray
+            'relatedPosts' => $relatedPosts
         ]);
     }
 }

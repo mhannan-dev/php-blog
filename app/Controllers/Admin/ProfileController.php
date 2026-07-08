@@ -3,16 +3,16 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
-use Twig\Environment;
-use User;
+use App\Contracts\UserRepositoryInterface;
+use App\Security\InputValidator;
 use Session;
-use mysqli_result;
+use Twig\Environment;
 
 class ProfileController extends BaseController
 {
-    private User $userModel;
+    private UserRepositoryInterface $userModel;
 
-    public function __construct(Environment $twig, User $userModel)
+    public function __construct(Environment $twig, UserRepositoryInterface $userModel)
     {
         parent::__construct($twig);
         $this->userModel = $userModel;
@@ -27,34 +27,49 @@ class ProfileController extends BaseController
         $success = '';
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $csrfToken = $_POST['csrf_token'] ?? '';
-            if (!Session::checkCsrfToken($csrfToken)) {
-                $error = 'Security check failed. Please refresh the page.';
+            if (!$this->validateCsrf($_POST, $error)) {
+                $userData = $this->userModel->getById($userId);
+                $this->render('dashboard/profile.twig', [
+                    'error'     => $error,
+                    'success'   => $success,
+                    'csrfToken' => Session::getCsrfToken(),
+                    'userData'  => $userData
+                ]);
+                return;
+            }
+
+            $name    = $this->getRequestBody('name');
+            $email   = $this->getRequestBody('email');
+            $details = $this->getRequestBody('details');
+
+            $validator = new InputValidator();
+            $validator
+                ->required('name', $name, 'Name')
+                ->required('email', $email, 'Email')
+                ->email('email', $email)
+                ->required('details', $details, 'Details');
+
+            if (!$validator->passes()) {
+                $error = $validator->firstError();
             } else {
-                $name    = trim($_POST['name']    ?? '');
-                $email   = trim($_POST['email']   ?? '');
-                $details = trim($_POST['details'] ?? '');
+                $updated = $this->userModel->update($userId, [
+                    'name'     => $name,
+                    'username' => Session::get('username'),
+                    'email'    => $email,
+                    'details'  => $details
+                ]);
 
-                if ($name === '' || $email === '' || $details === '') {
-                    $error = 'Fields must not be empty.';
-                } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                    $error = 'Invalid email format.';
+                if ($updated) {
+                    $success = 'Profile Updated Successfully.';
                 } else {
-                    $updated = $this->userModel->updateProfile($userId, $name, $email, $details);
-
-                    if ($updated) {
-                        $success = 'Profile Updated Successfully.';
-                    } else {
-                        $error = 'Profile Not Updated!';
-                    }
+                    $error = 'Profile Not Updated!';
                 }
             }
         }
 
         $userData = $this->userModel->getById($userId);
         if (!$userData) {
-            header('Location: index.php');
-            exit();
+            $this->redirect('index.php');
         }
 
         $this->render('dashboard/profile.twig', [
@@ -74,32 +89,38 @@ class ProfileController extends BaseController
         $success = '';
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $csrfToken = $_POST['csrf_token'] ?? '';
-            if (!Session::checkCsrfToken($csrfToken)) {
-                $error = 'Security check failed. Please refresh the page.';
+            if (!$this->validateCsrf($_POST, $error)) {
+                $this->render('dashboard/change_password.twig', [
+                    'error'     => $error,
+                    'success'   => $success,
+                    'csrfToken' => Session::getCsrfToken()
+                ]);
+                return;
+            }
+
+            $oldPass = $_POST['old_password'] ?? '';
+            $newPass = $_POST['new_password'] ?? '';
+
+            $validator = new InputValidator();
+            $validator
+                ->required('old_password', $oldPass, 'Old password')
+                ->required('new_password', $newPass, 'New password')
+                ->minLength('new_password', $newPass, 6, 'New password');
+
+            if (!$validator->passes()) {
+                $error = $validator->firstError();
             } else {
-                $oldPass = $_POST['old_password'] ?? '';
-                $newPass = $_POST['new_password'] ?? '';
-
-                if (empty($oldPass) || empty($newPass)) {
-                    $error = 'Fields must not be empty.';
-                } elseif (strlen($newPass) < 6) {
-                    $error = 'New password must be at least 6 characters.';
-                } else {
-                    $user = $this->userModel->getById($userId);
-
-                    if ($user && password_verify($oldPass, $user['password'])) {
-                        $newHash = password_hash($newPass, PASSWORD_BCRYPT);
-                        $updated = $this->userModel->updatePassword($userId, $newHash);
-
-                        if ($updated) {
-                            $success = 'Password Updated Successfully.';
-                        } else {
-                            $error = 'Password Not Updated!';
-                        }
+                $user = $this->userModel->getById($userId);
+                if ($user && password_verify($oldPass, $user['password'])) {
+                    $newHash = password_hash($newPass, PASSWORD_BCRYPT);
+                    $updated = $this->userModel->updatePassword($userId, $newHash);
+                    if ($updated) {
+                        $success = 'Password Updated Successfully.';
                     } else {
-                        $error = 'Old Password does not match!';
+                        $error = 'Password Not Updated!';
                     }
+                } else {
+                    $error = 'Old Password does not match!';
                 }
             }
         }

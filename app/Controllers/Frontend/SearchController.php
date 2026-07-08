@@ -3,15 +3,15 @@
 namespace App\Controllers\Frontend;
 
 use App\Controllers\BaseController;
+use App\Contracts\PostRepositoryInterface;
+use App\Security\InputValidator;
 use Twig\Environment;
-use Post;
-use mysqli_result;
 
 class SearchController extends BaseController
 {
-    private Post $postModel;
+    private PostRepositoryInterface $postModel;
 
-    public function __construct(Environment $twig, Post $postModel)
+    public function __construct(Environment $twig, PostRepositoryInterface $postModel)
     {
         parent::__construct($twig);
         $this->postModel = $postModel;
@@ -19,17 +19,12 @@ class SearchController extends BaseController
 
     public function index(): void
     {
-        $searchTerm   = trim($_GET['search'] ?? '');
-        $searchResult = $searchTerm !== '' ? $this->postModel->search($searchTerm) : false;
-
-        $searchResultArray = [];
-        if ($searchResult && $searchResult instanceof mysqli_result) {
-            $searchResultArray = $searchResult->fetch_all(MYSQLI_ASSOC) ?: [];
-        }
+        $searchTerm   = $this->getStringParam('search');
+        $searchResult = $searchTerm !== '' ? $this->postModel->search($searchTerm) : [];
 
         $this->render('frontend/search.twig', [
-            'searchTerm'   => $searchTerm,
-            'searchResult' => $searchResultArray
+            'searchTerm'   => InputValidator::sanitize($searchTerm),
+            'searchResult' => $searchResult
         ]);
     }
 }

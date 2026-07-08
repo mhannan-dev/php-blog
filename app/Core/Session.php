@@ -1,16 +1,26 @@
 <?php
 
 /**
- * Session helper — thin static wrapper around PHP sessions.
+ * Session helper — thin static wrapper around PHP sessions
+ * with enhanced security features.
  */
 class Session
 {
     /**
-     * Start the session if one is not already active.
+     * Start the session with secure settings if not already active.
      */
     public static function init(): void
     {
         if (session_status() === PHP_SESSION_NONE) {
+            ini_set('session.use_strict_mode', '1');
+            ini_set('session.use_only_cookies', '1');
+            ini_set('session.cookie_httponly', '1');
+            ini_set('session.cookie_samesite', 'Lax');
+
+            if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+                ini_set('session.cookie_secure', '1');
+            }
+
             session_start();
         }
     }
@@ -28,8 +38,16 @@ class Session
     }
 
     /**
+     * Regenerate session ID to prevent session fixation.
+     */
+    public static function regenerate(): void
+    {
+        self::init();
+        session_regenerate_id(true);
+    }
+
+    /**
      * Verify the user is logged in; redirect to login if not.
-     * Must be called before any output.
      */
     public static function checkSession(): void
     {
@@ -63,6 +81,12 @@ class Session
         $_SESSION = [];
         session_destroy();
 
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000,
+            $params['path'], $params['domain'],
+            $params['secure'] ?? false, $params['httponly'] ?? true
+        );
+
         header('Location: login.php');
         exit();
     }
@@ -84,5 +108,14 @@ class Session
             return false;
         }
         return hash_equals($stored, $token);
+    }
+
+    /**
+     * Refresh the CSRF token (call after successful form processing).
+     */
+    public static function refreshCsrfToken(): void
+    {
+        self::init();
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     }
 }

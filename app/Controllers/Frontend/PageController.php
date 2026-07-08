@@ -3,14 +3,14 @@
 namespace App\Controllers\Frontend;
 
 use App\Controllers\BaseController;
+use App\Contracts\PageRepositoryInterface;
 use Twig\Environment;
-use Page;
 
 class PageController extends BaseController
 {
-    private Page $pageModel;
+    private PageRepositoryInterface $pageModel;
 
-    public function __construct(Environment $twig, Page $pageModel)
+    public function __construct(Environment $twig, PageRepositoryInterface $pageModel)
     {
         parent::__construct($twig);
         $this->pageModel = $pageModel;
@@ -18,19 +18,16 @@ class PageController extends BaseController
 
     public function show(): void
     {
-        if (!isset($_GET['slug']) || empty($_GET['slug'])) {
-            header('Location: index.php');
-            exit();
+        $pageSlug = $this->getStringParam('slug');
+        if ($pageSlug === '') {
+            $this->redirect('index.php');
         }
 
-        $pageSlug = $_GET['slug'];
         $pageData = $this->pageModel->getBySlug($pageSlug);
-
         if (!$pageData) {
-            header('Location: 404.php');
-            exit();
+            $this->redirect('404.php');
         }
-        
+
         $this->render('frontend/page.twig', [
             'pageData' => $pageData
         ]);

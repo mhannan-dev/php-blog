@@ -3,20 +3,24 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
-use Category;
-use Contact;
-use Post;
-use Session;
+use App\Contracts\PostRepositoryInterface;
+use App\Contracts\CategoryRepositoryInterface;
+use App\Contracts\ContactRepositoryInterface;
 use Twig\Environment;
+use Session;
 
 class DashboardController extends BaseController
 {
-    private Post $postModel;
-    private Category $categoryModel;
-    private Contact $contactModel;
+    private PostRepositoryInterface $postModel;
+    private CategoryRepositoryInterface $categoryModel;
+    private ContactRepositoryInterface $contactModel;
 
-    public function __construct(Environment $twig, Post $postModel, Category $categoryModel, Contact $contactModel)
-    {
+    public function __construct(
+        Environment $twig,
+        PostRepositoryInterface $postModel,
+        CategoryRepositoryInterface $categoryModel,
+        ContactRepositoryInterface $contactModel
+    ) {
         parent::__construct($twig);
         $this->postModel     = $postModel;
         $this->categoryModel = $categoryModel;
@@ -27,19 +31,14 @@ class DashboardController extends BaseController
     {
         $this->requireLogin();
 
-        // Handle logout
         if (isset($_GET['action']) && $_GET['action'] === 'logout') {
             Session::destroy();
-            exit(); 
-            // Session::destroy() redirects, but just in case
         }
 
         $totalPosts = $this->postModel->getTotalCount();
         $unreadMsgs = $this->contactModel->getUnreadCount();
-        
-        $cats       = $this->categoryModel->getAll();
-        $totalCats  = $cats ? $cats->num_rows : 0;
-        
+        $totalCats  = count($this->categoryModel->getAll());
+
         $this->render('dashboard/index.twig', [
             'totalPosts' => $totalPosts,
             'unreadMsgs' => $unreadMsgs,

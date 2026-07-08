@@ -3,16 +3,16 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
-use Twig\Environment;
-use User;
+use App\Contracts\UserRepositoryInterface;
+use App\Security\InputValidator;
 use Session;
-use mysqli_result;
+use Twig\Environment;
 
 class UserController extends BaseController
 {
-    private User $userModel;
+    private UserRepositoryInterface $userModel;
 
-    public function __construct(Environment $twig, User $userModel)
+    public function __construct(Environment $twig, UserRepositoryInterface $userModel)
     {
         parent::__construct($twig);
         $this->userModel = $userModel;
@@ -25,32 +25,24 @@ class UserController extends BaseController
         $error   = '';
         $success = '';
 
-        if (isset($_GET['delUser'])) {
+        $delId = $this->getIntParam('delUser');
+        if ($delId > 0) {
             if (Session::get('userRole') !== '0') {
                 $error = 'You do not have permission to delete users.';
             } else {
-                $delId = (int) $_GET['delUser'];
-                if ($delId > 0) {
-                    $deleted = $this->userModel->delete($delId);
-                    if ($deleted) {
-                        $success = 'User deleted successfully.';
-                    } else {
-                        $error = 'User not deleted.';
-                    }
+                $deleted = $this->userModel->delete($delId);
+                if ($deleted) {
+                    $success = 'User deleted successfully.';
+                } else {
+                    $error = 'User not deleted.';
                 }
             }
-        }
-
-        $usersResult = $this->userModel->getAll();
-        $usersArray = [];
-        if ($usersResult && $usersResult instanceof mysqli_result) {
-            $usersArray = $usersResult->fetch_all(MYSQLI_ASSOC) ?: [];
         }
 
         $this->render('dashboard/user_list.twig', [
             'error'   => $error,
             'success' => $success,
-            'users'   => $usersArray
+            'users'   => $this->userModel->getAll()
         ]);
     }
 
@@ -58,39 +50,46 @@ class UserController extends BaseController
     {
         $this->requireAdmin();
 
-        $error   = '';
-        $success = '';
-        $username = '';
+        $error     = '';
+        $success   = '';
+        $username  = '';
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $csrfToken = $_POST['csrf_token'] ?? '';
-            if (!Session::checkCsrfToken($csrfToken)) {
-                $error = 'Security check failed. Please refresh the page.';
+            if (!$this->validateCsrf($_POST, $error)) {
+                $this->render('dashboard/add_user.twig', [
+                    'error'     => $error,
+                    'success'   => $success,
+                    'csrfToken' => Session::getCsrfToken(),
+                    'username'  => $username
+                ]);
+                return;
+            }
+
+            $username = $this->getRequestBody('username');
+            $password = $this->getRequestBody('password');
+            $role     = $this->getRequestBody('role');
+
+            $validator = new InputValidator();
+            $validator
+                ->required('username', $username, 'Username')
+                ->required('password', $password, 'Password')
+                ->minLength('password', $password, 6, 'Password')
+                ->required('role', $role, 'Role')
+                ->inArray('role', $role, ['0', '1', '2'], 'Role');
+
+            if (!$validator->passes()) {
+                $error = $validator->firstError();
+            } elseif ($this->userModel->usernameExists($username)) {
+                $error = 'Username already exists. Please choose a different username.';
             } else {
-                $username = trim($_POST['username'] ?? '');
-                $password = trim($_POST['password'] ?? '');
-                $role     = trim($_POST['role']     ?? '');
+                $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+                $inserted       = $this->userModel->create($username, $hashedPassword, (int) $role);
 
-                if ($username === '' || $password === '' || $role === '') {
-                    $error = 'All fields are required.';
-                } elseif (strlen($password) < 6) {
-                    $error = 'Password must be at least 6 characters.';
-                } elseif (!in_array($role, ['0', '1', '2'], true)) {
-                    $error = 'Invalid role selected.';
+                if ($inserted) {
+                    $success  = 'User created successfully.';
+                    $username = '';
                 } else {
-                    if ($this->userModel->usernameExists($username)) {
-                        $error = 'Username already exists. Please choose a different username.';
-                    } else {
-                        $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
-                        $inserted       = $this->userModel->create($username, $hashedPassword, (int) $role);
-
-                        if ($inserted) {
-                            $success  = 'User created successfully.';
-                            $username = '';
-                        } else {
-                            $error = 'Failed to create user. Please try again.';
-                        }
-                    }
+                    $error = 'Failed to create user. Please try again.';
                 }
             }
         }
@@ -107,17 +106,14 @@ class UserController extends BaseController
     {
         $this->requireLogin();
 
-        if (!isset($_GET['user_id']) || (int) $_GET['user_id'] <= 0) {
-            header('Location: user_list.php');
-            exit();
+        $userId = $this->getIntParam('user_id');
+        if ($userId <= 0) {
+            $this->redirect('user_list.php');
         }
 
-        $userId = (int) $_GET['user_id'];
         $userData = $this->userModel->getById($userId);
-
         if (!$userData) {
-            header('Location: user_list.php');
-            exit();
+            $this->redirect('user_list.php');
         }
 
         $this->render('dashboard/views_user.twig', [

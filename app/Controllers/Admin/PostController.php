@@ -3,23 +3,29 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
-use Twig\Environment;
-use Post;
-use Category;
+use App\Contracts\PostRepositoryInterface;
+use App\Contracts\CategoryRepositoryInterface;
+use App\Security\InputValidator;
+use App\Services\FileUploader;
 use Session;
 use Format;
-use mysqli_result;
+use Twig\Environment;
 
 class PostController extends BaseController
 {
-    private Post $postModel;
-    private Category $categoryModel;
+    private PostRepositoryInterface $postModel;
+    private CategoryRepositoryInterface $categoryModel;
+    private FileUploader $uploader;
 
-    public function __construct(Environment $twig, Post $postModel, Category $categoryModel)
-    {
+    public function __construct(
+        Environment $twig,
+        PostRepositoryInterface $postModel,
+        CategoryRepositoryInterface $categoryModel
+    ) {
         parent::__construct($twig);
-        $this->postModel = $postModel;
+        $this->postModel     = $postModel;
         $this->categoryModel = $categoryModel;
+        $this->uploader      = new FileUploader();
     }
 
     public function list(): void
@@ -29,10 +35,8 @@ class PostController extends BaseController
         $success = '';
         $error   = '';
 
-        // Handle delete
-        if (isset($_GET['delpost']) && (int) $_GET['delpost'] > 0) {
-            $delId = (int) $_GET['delpost'];
-            
+        $delId = $this->getIntParam('delpost');
+        if ($delId > 0) {
             $post = $this->postModel->getById($delId);
             if ($post) {
                 $canDelete = ((int) Session::get('userId') === (int) $post['userid'] || Session::get('userRole') === '0');
@@ -40,27 +44,20 @@ class PostController extends BaseController
                     $error = 'You do not have permission to delete this post.';
                 } else {
                     $deleted = $this->postModel->delete($delId);
-                    if ($deleted) {
-                        $success = 'Post deleted successfully.';
-                    } else {
-                        $error = 'Failed to delete the post.';
-                    }
+                    $success = $deleted ? 'Post deleted successfully.' : 'Failed to delete the post.';
+                    $error   = $deleted ? '' : 'Failed to delete the post.';
                 }
             } else {
                 $error = 'Post not found.';
             }
         }
 
-        $postsResult = $this->postModel->getAllWithCategory();
-        $postsArray = [];
-        if ($postsResult && $postsResult instanceof mysqli_result) {
-            $postsArray = $postsResult->fetch_all(MYSQLI_ASSOC) ?: [];
-        }
+        $posts = $this->postModel->getAllWithCategory();
 
         $this->render('dashboard/post_list.twig', [
             'error'           => $error,
             'success'         => $success,
-            'posts'           => $postsArray,
+            'posts'           => $posts,
             'current_user_id' => Session::get('userId')
         ]);
     }
@@ -73,43 +70,57 @@ class PostController extends BaseController
         $success = '';
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $csrfToken = $_POST['csrf_token'] ?? '';
-            if (!Session::checkCsrfToken($csrfToken)) {
-                $error = 'Security check failed. Please refresh the page.';
+            if (!$this->validateCsrf($_POST, $error)) {
+                $categories = $this->categoryModel->getAll();
+                $this->render('dashboard/addpost.twig', [
+                    'error'      => $error,
+                    'success'    => $success,
+                    'csrfToken'  => Session::getCsrfToken(),
+                    'categories' => $categories,
+                    'post_data'  => $_POST
+                ]);
+                return;
+            }
+
+            $title  = $this->getRequestBody('title');
+            $body   = $this->getRequestBody('body');
+            $cat    = (int) ($_POST['cat'] ?? 0);
+            $author = $this->getRequestBody('author');
+            $tags   = $this->getRequestBody('tags');
+            $userId = (int) Session::get('userId');
+
+            $validator = new InputValidator();
+            $validator
+                ->required('title', $title, 'Title')
+                ->required('body', $body, 'Body')
+                ->required('author', $author, 'Author')
+                ->required('tags', $tags, 'Tags')
+                ->numeric('cat', $cat, 'Category');
+
+            if (!$validator->passes()) {
+                $error = $validator->firstError();
             } else {
-                $title  = trim($_POST['title']  ?? '');
-                $body   = trim($_POST['body']   ?? '');
-                $cat    = (int) ($_POST['cat']    ?? 0);
-                $author = trim($_POST['author'] ?? '');
-                $tags   = trim($_POST['tags']   ?? '');
-                $userId = (int) Session::get('userId');
-
-                $allowedExts  = ['jpg', 'jpeg', 'png', 'gif'];
-                $file         = $_FILES['image'] ?? null;
-                $fileName     = $file['name']     ?? '';
-                $fileSize     = $file['size']     ?? 0;
-                $fileTmp      = $file['tmp_name'] ?? '';
-                $fileExt      = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-
-                if ($title === '' || $body === '' || $cat <= 0 || $author === '' || $fileName === '' || $tags === '') {
-                    $error = 'All fields are required.';
-                } elseif ($fileSize > 1_048_576) {
-                    $error = 'Image size must be less than 1 MB.';
-                } elseif (!in_array($fileExt, $allowedExts, true)) {
-                    $error = 'Allowed image types: ' . implode(', ', $allowedExts) . '.';
+                $fileError = $this->uploader->validate($_FILES['image'] ?? []);
+                if ($fileError !== null) {
+                    $error = $fileError;
                 } else {
-                    $uniqueName   = bin2hex(random_bytes(8)) . '.' . $fileExt;
-                    $uploadedPath = 'upload/' . $uniqueName;
-
-                    if (!move_uploaded_file($fileTmp, $uploadedPath)) {
-                        $error = 'Failed to upload image. Check folder permissions.';
+                    $uploadResult = $this->uploader->upload($_FILES['image'] ?? []);
+                    if (!$uploadResult['success']) {
+                        $error = $uploadResult['error'];
                     } else {
                         $slug     = Format::slugify($title);
-                        $inserted = $this->postModel->create($title, $slug, $body, $cat, $author, $uploadedPath, $userId);
+                        $inserted = $this->postModel->create([
+                            'title'       => $title,
+                            'slug'        => $slug,
+                            'body'        => $body,
+                            'category_id' => $cat,
+                            'author'      => $author,
+                            'image'       => $uploadResult['path'],
+                            'user_id'     => $userId
+                        ]);
 
                         if ($inserted) {
-                            header('Location: post_list.php');
-                            exit();
+                            $this->redirect('post_list.php');
                         } else {
                             $error = 'Failed to save the post. Please try again.';
                         }
@@ -118,17 +129,13 @@ class PostController extends BaseController
             }
         }
 
-        $categoriesResult = $this->categoryModel->getAll();
-        $categoriesArray = [];
-        if ($categoriesResult && $categoriesResult instanceof mysqli_result) {
-            $categoriesArray = $categoriesResult->fetch_all(MYSQLI_ASSOC) ?: [];
-        }
+        $categories = $this->categoryModel->getAll();
 
         $this->render('dashboard/addpost.twig', [
             'error'      => $error,
             'success'    => $success,
             'csrfToken'  => Session::getCsrfToken(),
-            'categories' => $categoriesArray,
+            'categories' => $categories,
             'post_data'  => $_POST
         ]);
     }
@@ -137,75 +144,80 @@ class PostController extends BaseController
     {
         $this->requireLogin();
 
-        if (!isset($_GET['post_id']) || (int) $_GET['post_id'] <= 0) {
-            header('Location: post_list.php');
-            exit();
+        $postId = $this->getIntParam('post_id');
+        if ($postId <= 0) {
+            $this->redirect('post_list.php');
         }
 
-        $postId = (int) $_GET['post_id'];
         $error   = '';
         $success = '';
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $csrfToken = $_POST['csrf_token'] ?? '';
-            if (!Session::checkCsrfToken($csrfToken)) {
-                $error = 'Security check failed. Please refresh the page.';
+            if (!$this->validateCsrf($_POST, $error)) {
+                $postData = $this->postModel->getById($postId);
+                $categories = $this->categoryModel->getAll();
+                $this->render('dashboard/edit_post.twig', [
+                    'error'      => $error,
+                    'success'    => $success,
+                    'csrfToken'  => Session::getCsrfToken(),
+                    'categories' => $categories,
+                    'postData'   => $postData
+                ]);
+                return;
+            }
+
+            $title  = $this->getRequestBody('title');
+            $body   = $this->getRequestBody('body');
+            $cat    = (int) ($_POST['cat'] ?? 0);
+            $author = $this->getRequestBody('author');
+            $tags   = $this->getRequestBody('tags');
+            $userId = (int) Session::get('userId');
+            $slug   = Format::slugify($title);
+
+            $data = [
+                'title'       => $title,
+                'slug'        => $slug,
+                'body'        => $body,
+                'category_id' => $cat,
+                'author'      => $author,
+                'user_id'     => $userId
+            ];
+
+            $validator = new InputValidator();
+            $validator
+                ->required('title', $title, 'Title')
+                ->required('body', $body, 'Body')
+                ->required('author', $author, 'Author')
+                ->required('tags', $tags, 'Tags')
+                ->numeric('cat', $cat, 'Category');
+
+            if (!$validator->passes()) {
+                $error = $validator->firstError();
             } else {
-                $title  = trim($_POST['title']  ?? '');
-                $body   = trim($_POST['body']   ?? '');
-                $cat    = (int) ($_POST['cat']    ?? 0);
-                $author = trim($_POST['author'] ?? '');
-                $tags   = trim($_POST['tags']   ?? '');
-                $userId = (int) Session::get('userId');
-
-                $allowedExts = ['jpg', 'jpeg', 'png', 'gif'];
-                $file        = $_FILES['image'] ?? null;
-                $fileName    = $file['name']     ?? '';
-                $fileSize    = $file['size']     ?? 0;
-                $fileTmp     = $file['tmp_name'] ?? '';
-                $fileExt     = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-
-                $data = [
-                    'title'       => $title,
-                    'slug'        => Format::slugify($title),
-                    'body'        => $body,
-                    'category_id' => $cat,
-                    'author'      => $author,
-                    'user_id'     => $userId
-                ];
-
-                if ($title === '' || $body === '' || $cat <= 0 || $author === '' || $tags === '') {
-                    $error = 'All fields are required.';
-                } else {
-                    if (!empty($fileName)) {
-                        if ($fileSize > 1_048_576) {
-                            $error = 'Image size must be less than 1 MB.';
-                        } elseif (!in_array($fileExt, $allowedExts, true)) {
-                            $error = 'Allowed image types: ' . implode(', ', $allowedExts) . '.';
+                $file = $_FILES['image'] ?? null;
+                if ($file && !empty($file['name'])) {
+                    $fileError = $this->uploader->validate($file);
+                    if ($fileError !== null) {
+                        $error = $fileError;
+                    } else {
+                        $uploadResult = $this->uploader->upload($file);
+                        if (!$uploadResult['success']) {
+                            $error = $uploadResult['error'];
                         } else {
-                            $uniqueName   = bin2hex(random_bytes(8)) . '.' . $fileExt;
-                            $uploadedPath = 'upload/' . $uniqueName;
-
-                            if (!move_uploaded_file($fileTmp, $uploadedPath)) {
-                                $error = 'Failed to upload image. Check folder permissions.';
+                            $updated = $this->postModel->updateWithImage($postId, $data, $uploadResult['path']);
+                            if ($updated) {
+                                $this->redirect('post_list.php');
                             } else {
-                                $updated = $this->postModel->updateWithImage($postId, $data, $uploadedPath);
-                                if ($updated) {
-                                    header('Location: post_list.php');
-                                    exit();
-                                } else {
-                                    $error = 'Failed to update the post. Please try again.';
-                                }
+                                $error = 'Failed to update the post. Please try again.';
                             }
                         }
+                    }
+                } else {
+                    $updated = $this->postModel->update($postId, $data);
+                    if ($updated) {
+                        $this->redirect('post_list.php');
                     } else {
-                        $updated = $this->postModel->update($postId, $data);
-                        if ($updated) {
-                            header('Location: post_list.php');
-                            exit();
-                        } else {
-                            $error = 'Failed to update the post. Please try again.';
-                        }
+                        $error = 'Failed to update the post. Please try again.';
                     }
                 }
             }
@@ -213,21 +225,16 @@ class PostController extends BaseController
 
         $postData = $this->postModel->getById($postId);
         if (!$postData) {
-            header('Location: post_list.php');
-            exit();
+            $this->redirect('post_list.php');
         }
 
-        $categoriesResult = $this->categoryModel->getAll();
-        $categoriesArray = [];
-        if ($categoriesResult && $categoriesResult instanceof mysqli_result) {
-            $categoriesArray = $categoriesResult->fetch_all(MYSQLI_ASSOC) ?: [];
-        }
+        $categories = $this->categoryModel->getAll();
 
         $this->render('dashboard/edit_post.twig', [
             'error'      => $error,
             'success'    => $success,
             'csrfToken'  => Session::getCsrfToken(),
-            'categories' => $categoriesArray,
+            'categories' => $categories,
             'postData'   => $postData
         ]);
     }
@@ -236,17 +243,14 @@ class PostController extends BaseController
     {
         $this->requireLogin();
 
-        if (!isset($_GET['post_id']) || (int) $_GET['post_id'] <= 0) {
-            header('Location: post_list.php');
-            exit();
+        $postId = $this->getIntParam('post_id');
+        if ($postId <= 0) {
+            $this->redirect('post_list.php');
         }
 
-        $postId = (int) $_GET['post_id'];
         $postData = $this->postModel->getById($postId);
-
         if (!$postData) {
-            header('Location: post_list.php');
-            exit();
+            $this->redirect('post_list.php');
         }
 
         $this->render('dashboard/post_view.twig', [

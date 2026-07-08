@@ -3,18 +3,20 @@
 namespace App\Controllers\Frontend;
 
 use App\Controllers\BaseController;
+use App\Contracts\CategoryRepositoryInterface;
+use App\Contracts\PostRepositoryInterface;
 use Twig\Environment;
-use Category;
-use Post;
-use mysqli_result;
 
 class CategoryController extends BaseController
 {
-    private Category $categoryModel;
-    private Post $postModel;
+    private CategoryRepositoryInterface $categoryModel;
+    private PostRepositoryInterface $postModel;
 
-    public function __construct(Environment $twig, Category $categoryModel, Post $postModel)
-    {
+    public function __construct(
+        Environment $twig,
+        CategoryRepositoryInterface $categoryModel,
+        PostRepositoryInterface $postModel
+    ) {
         parent::__construct($twig);
         $this->categoryModel = $categoryModel;
         $this->postModel = $postModel;
@@ -22,29 +24,21 @@ class CategoryController extends BaseController
 
     public function index(): void
     {
-        $catParam = trim($_GET['cat_post'] ?? '');
-
-        if (empty($catParam)) {
-            header('Location: index.php');
-            exit();
+        $catParam = $this->getStringParam('cat_post');
+        if ($catParam === '') {
+            $this->redirect('index.php');
         }
 
         $category = $this->categoryModel->getByParam($catParam);
-
         if (!$category) {
-            header('Location: 404.php');
-            exit();
+            $this->redirect('404.php');
         }
 
         $catPosts = $this->postModel->getByCategory((int) $category['id']);
-        $catPostsArray = [];
-        if ($catPosts && $catPosts instanceof mysqli_result) {
-            $catPostsArray = $catPosts->fetch_all(MYSQLI_ASSOC) ?: [];
-        }
 
         $this->render('frontend/category.twig', [
             'category' => $category,
-            'catPosts' => $catPostsArray
+            'catPosts' => $catPosts
         ]);
     }
 }

@@ -3,14 +3,16 @@
 namespace App\Controllers\Frontend;
 
 use App\Controllers\BaseController;
+use App\Contracts\ContactRepositoryInterface;
+use App\Security\InputValidator;
+use Session;
 use Twig\Environment;
-use Contact;
 
 class ContactController extends BaseController
 {
-    private Contact $contactModel;
+    private ContactRepositoryInterface $contactModel;
 
-    public function __construct(Environment $twig, Contact $contactModel)
+    public function __construct(Environment $twig, ContactRepositoryInterface $contactModel)
     {
         parent::__construct($twig);
         $this->contactModel = $contactModel;
@@ -22,27 +24,35 @@ class ContactController extends BaseController
         $success = '';
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $fname = trim($_POST['fname'] ?? '');
-            $lname = trim($_POST['lname'] ?? '');
-            $email = trim($_POST['email'] ?? '');
-            $msg   = trim($_POST['msg']   ?? '');
-
-            if (empty($fname)) {
-                $error = 'First name must not be empty.';
-            } elseif (empty($lname)) {
-                $error = 'Last name must not be empty.';
-            } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                $error = 'Please enter a valid email address.';
-            } elseif (empty($msg)) {
-                $error = 'Message must not be empty.';
+            $csrfToken = $_POST['csrf_token'] ?? '';
+            
+            if (!Session::checkCsrfToken($csrfToken)) {
+                $error = 'Security check failed. Please refresh the page.';
             } else {
-                $inserted = $this->contactModel->create($fname, $lname, $email, $msg);
+                $fname = trim($_POST['fname'] ?? '');
+                $lname = trim($_POST['lname'] ?? '');
+                $email = trim($_POST['email'] ?? '');
+                $msg   = trim($_POST['msg']   ?? '');
 
-                if ($inserted) {
-                    $success = 'Your message has been sent successfully.';
-                    $_POST = [];
+                $validator = new InputValidator();
+                $validator
+                    ->required('fname', $fname, 'First name')
+                    ->required('lname', $lname, 'Last name')
+                    ->required('email', $email, 'Email address')
+                    ->email('email', $email)
+                    ->required('msg', $msg, 'Message');
+
+                if (!$validator->passes()) {
+                    $error = $validator->firstError();
                 } else {
-                    $error = 'Failed to send your message. Please try again.';
+                    $inserted = $this->contactModel->create($fname, $lname, $email, $msg);
+
+                    if ($inserted) {
+                        $success = 'Your message has been sent successfully.';
+                        $_POST = [];
+                    } else {
+                        $error = 'Failed to send your message. Please try again.';
+                    }
                 }
             }
         }
@@ -50,6 +60,7 @@ class ContactController extends BaseController
         $this->render('frontend/contact_us.twig', [
             'error'     => $error,
             'success'   => $success,
+            'csrfToken' => Session::getCsrfToken(),
             'post_data' => $_POST
         ]);
     }

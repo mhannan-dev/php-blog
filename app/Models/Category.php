@@ -1,58 +1,61 @@
 <?php
 
-/**
- * Category — all database operations for post categories.
- */
-class Category
+use App\Contracts\CategoryRepositoryInterface;
+
+class Category implements CategoryRepositoryInterface
 {
     public function __construct(private Database $db) {}
 
-    public function getAll(): mysqli_result|false
+    public function getAll(): array
     {
-        return $this->db->select("SELECT * FROM categories ORDER BY name ASC");
+        return $this->db->fetchAll("SELECT * FROM categories ORDER BY name ASC");
     }
 
     public function getById(int $id): array|false
     {
-        $result = $this->db->select(
-            "SELECT * FROM categories WHERE id = $id LIMIT 1"
+        return $this->db->fetchOne(
+            "SELECT * FROM categories WHERE id = ? LIMIT 1",
+            'i', [$id]
         );
-        return $result ? $result->fetch_assoc() : false;
     }
 
     public function getByParam(string $param): array|false
     {
-        $param = $this->db->escape(trim($param));
         if (is_numeric($param)) {
-            $result = $this->db->select("SELECT * FROM categories WHERE id = $param LIMIT 1");
-        } else {
-            $result = $this->db->select("SELECT * FROM categories WHERE slug = '$param' LIMIT 1");
+            return $this->db->fetchOne(
+                "SELECT * FROM categories WHERE id = ? LIMIT 1",
+                'i', [(int) $param]
+            );
         }
-        return $result ? $result->fetch_assoc() : false;
+        return $this->db->fetchOne(
+            "SELECT * FROM categories WHERE slug = ? LIMIT 1",
+            's', [$param]
+        );
     }
 
     public function create(string $name): bool
     {
-        $name = $this->db->escape(trim($name));
         $slug = Format::slugify($name);
-        return $this->db->insert(
-            "INSERT INTO categories (name, slug) VALUES ('$name', '$slug')"
+        return (bool) $this->db->insert(
+            "INSERT INTO categories (name, slug) VALUES (?, ?)",
+            'ss', [trim($name), $slug]
         );
     }
 
     public function update(int $id, string $name): bool
     {
-        $name = $this->db->escape(trim($name));
         $slug = Format::slugify($name);
-        return $this->db->update(
-            "UPDATE categories SET name = '$name', slug = '$slug' WHERE id = $id"
+        return (bool) $this->db->update(
+            "UPDATE categories SET name = ?, slug = ? WHERE id = ?",
+            'ssi', [trim($name), $slug, $id]
         );
     }
 
     public function delete(int $id): bool
     {
-        return $this->db->delete("DELETE FROM categories WHERE id = $id");
+        return (bool) $this->db->delete(
+            "DELETE FROM categories WHERE id = ?",
+            'i', [$id]
+        );
     }
 }
-
-
