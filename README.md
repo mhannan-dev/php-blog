@@ -217,6 +217,7 @@ Seeder execution order (respects FK constraints):
 │       ├── frontend/               # Public facing views
 │       └── dashboard/              # Admin dashboard views
 ├── app/                            # OOP core & business logic
+│   ├── Contracts/                  # Interfaces defining model and service contracts
 │   ├── Controllers/                # MVC Controllers (Admin & Frontend)
 │   ├── Core/                       # Singleton DB & session handling
 │   │   ├── Database.php
@@ -235,8 +236,10 @@ Seeder execution order (respects FK constraints):
 │   ├── Helpers/                    # Utility helpers
 │   │   ├── Debug.php               # dump() — dev-only debug helper
 │   │   └── Format.php              # Content sanitization & formatting
-│   ├── Models/                     # Database-mapped PHP classes
+│   ├── Models/                     # Database-mapped PHP classes implementing Contracts
 │   │   └── Post.php · User.php · Category.php · ... (6 total)
+│   ├── Security/                   # Security handlers (e.g. InputValidator)
+│   ├── Services/                   # Business logic services (e.g. FileUploader)
 │   └── bootstrap.php               # App entry bootstrap & dependency injection
 ├── bin/                            # CLI entry points
 │   ├── make-migration              # Generate Laravel-style migration file
