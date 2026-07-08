@@ -7,7 +7,7 @@ namespace App\Database\Migrations;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
-final class CreateCategoriesTable extends AbstractMigration
+final class Version20260704000008 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -23,7 +23,9 @@ final class CreateCategoriesTable extends AbstractMigration
         $t = $schema->createTable('categories');
         $t->addColumn('id',   'integer', ['autoincrement' => true, 'unsigned' => true, 'notnull' => true]);
         $t->addColumn('name', 'string',  ['length' => 100, 'notnull' => true]);
+        $t->addColumn('slug', 'string',  ['length' => 100, 'notnull' => true]);
         $t->setPrimaryKey(['id']);
+        $t->addUniqueIndex(['slug'], 'uq_categories_slug');
     }
 
     public function down(Schema $schema): void

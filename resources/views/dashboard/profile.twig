@@ -1,0 +1,40 @@
+{% extends 'dashboard/base.twig' %}
+{% import 'dashboard/components/button.twig' as btn %}
+{% import 'dashboard/components/input.twig' as form %}
+
+{% block content %}
+<div class="glass-card rounded-3xl p-6 sm:p-8 shadow-xl shadow-black/5 flex flex-col gap-6">
+    <div class="flex flex-col gap-1 border-b border-white/5 pb-4">
+        <h2 class="text-xl font-bold font-outfit text-white">Update Profile</h2>
+        <p class="text-slate-400 text-xs font-medium">Edit your personal contact and login credentials</p>
+    </div>
+
+    {% if success %}
+        <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-350 px-4 py-3 rounded-xl text-sm flex items-center gap-2">
+            <i class="fa-solid fa-circle-check shrink-0"></i>
+            <span>{{ success }}</span>
+        </div>
+    {% endif %}
+    {% if error %}
+        <div class="bg-red-500/10 border border-red-500/20 text-red-350 px-4 py-3 rounded-xl text-sm flex items-center gap-2">
+            <i class="fa-solid fa-triangle-exclamation shrink-0"></i>
+            <span>{{ error }}</span>
+        </div>
+    {% endif %}
+
+    <form action="" method="post" class="flex flex-col gap-5 max-w-xl">
+        <!-- CSRF Token -->
+        <input type="hidden" name="csrf_token" value="{{ csrfToken }}">
+
+        {{ form.text('name', 'Full Name', user.name, '', true, 'text', 'prof-name', 'fa-regular fa-id-card') }}
+        {{ form.text('username', 'Username', user.username, '', true, 'text', 'prof-username', 'fa-regular fa-user') }}
+        {{ form.text('email', 'Email Address', user.email, '', true, 'email', 'prof-email', 'fa-regular fa-envelope') }}
+        {{ form.textarea('details', 'Bio Details', user.details, 'rows-4', false, 'prof-details') }}
+
+        <div class="mt-2 flex gap-3">
+            {{ btn.primary('Update Profile', 'submit', 'submit', 'fa-solid fa-user-check') }}
+            {{ btn.link('Cancel', 'index.php') }}
+        </div>
+    </form>
+</div>
+{% endblock %}

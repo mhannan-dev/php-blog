@@ -1,9 +1,8 @@
 <?php
 
 /**
- * Database class — wraps MySQLi with safer error handling.
- * Credentials are private; raw link is exposed only for legacy
- * mysqli_real_escape_string() calls that have not yet been migrated.
+ * Database class — wraps MySQLi with prepared statement support,
+ * safer query execution, and singleton access pattern.
  */
 class Database
 {
@@ -14,7 +13,6 @@ class Database
     private string $pass;
     private string $dbname;
 
-    /** @var mysqli */
     public mysqli $link;
 
     private function __construct()
@@ -46,7 +44,6 @@ class Database
         $this->link = new mysqli($this->host, $this->user, $this->pass, $this->dbname);
 
         if ($this->link->connect_errno) {
-            // In production, never expose connection details to the browser.
             error_log('DB connection failed: ' . $this->link->connect_error);
             die('Database connection error. Please try again later.');
         }
@@ -56,7 +53,7 @@ class Database
 
     /**
      * Escape a string value for safe interpolation into a query.
-     * Prefer prepared statements for new code; use this for legacy queries.
+     * Prefer prepared statements for all new code.
      */
     public function escape(string $value): string
     {
@@ -64,7 +61,127 @@ class Database
     }
 
     /**
-     * Execute a SELECT query and return the result set, or false if no rows.
+     * Prepare a SQL statement for execution.
+     */
+    public function prepare(string $query): \mysqli_stmt|false
+    {
+        $stmt = $this->link->prepare($query);
+        if ($stmt === false) {
+            error_log('DB prepare error: ' . $this->link->error . ' | Query: ' . $query);
+            return false;
+        }
+        return $stmt;
+    }
+
+    /**
+     * Execute a prepared SELECT query and return all rows as an array.
+     */
+    public function fetchAll(string $query, string $types = '', array $params = []): array
+    {
+        $stmt = $this->prepare($query);
+        if ($stmt === false) {
+            return [];
+        }
+
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $rows = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+        $stmt->close();
+
+        return $rows;
+    }
+
+    /**
+     * Execute a prepared SELECT query and return a single row.
+     */
+    public function fetchOne(string $query, string $types = '', array $params = []): array|false
+    {
+        $stmt = $this->prepare($query);
+        if ($stmt === false) {
+            return false;
+        }
+
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result ? $result->fetch_assoc() : false;
+        $stmt->close();
+
+        return $row;
+    }
+
+    /**
+     * Execute a prepared INSERT query and return the insert ID.
+     */
+    public function insert(string $query, string $types = '', array $params = []): int|false
+    {
+        $stmt = $this->prepare($query);
+        if ($stmt === false) {
+            return false;
+        }
+
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+
+        $success = $stmt->execute();
+        $insertId = $success ? $stmt->insert_id : false;
+        $stmt->close();
+
+        return $success ? $insertId : false;
+    }
+
+    /**
+     * Execute a prepared UPDATE query and return affected rows count.
+     */
+    public function update(string $query, string $types = '', array $params = []): int|false
+    {
+        $stmt = $this->prepare($query);
+        if ($stmt === false) {
+            return false;
+        }
+
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+
+        $success = $stmt->execute();
+        $affected = $success ? $stmt->affected_rows : false;
+        $stmt->close();
+
+        return $success ? $affected : false;
+    }
+
+    /**
+     * Execute a prepared DELETE query and return affected rows count.
+     */
+    public function delete(string $query, string $types = '', array $params = []): int|false
+    {
+        $stmt = $this->prepare($query);
+        if ($stmt === false) {
+            return false;
+        }
+
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+
+        $success = $stmt->execute();
+        $affected = $success ? $stmt->affected_rows : false;
+        $stmt->close();
+
+        return $success ? $affected : false;
+    }
+
+    /**
+     * Execute a raw SELECT query (legacy support, prefer fetchAll/fetchOne).
      */
     public function select(string $query): mysqli_result|false
     {
@@ -78,47 +195,24 @@ class Database
     }
 
     /**
-     * Execute an INSERT query. Returns true on success, false on failure.
+     * Execute a scalar query returning a single value.
      */
-    public function insert(string $query): bool
+    public function fetchColumn(string $query, string $types = '', array $params = []): mixed
     {
-        $result = $this->link->query($query);
-
-        if ($result === false) {
-            error_log('DB insert error: ' . $this->link->error . ' | Query: ' . $query);
+        $stmt = $this->prepare($query);
+        if ($stmt === false) {
             return false;
         }
 
-        return true;
-    }
-
-    /**
-     * Execute an UPDATE query. Returns true on success, false on failure.
-     */
-    public function update(string $query): bool
-    {
-        $result = $this->link->query($query);
-
-        if ($result === false) {
-            error_log('DB update error: ' . $this->link->error . ' | Query: ' . $query);
-            return false;
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
         }
 
-        return true;
-    }
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $value = $result ? $result->fetch_row()[0] ?? false : false;
+        $stmt->close();
 
-    /**
-     * Execute a DELETE query. Returns true on success, false on failure.
-     */
-    public function delete(string $query): bool
-    {
-        $result = $this->link->query($query);
-
-        if ($result === false) {
-            error_log('DB delete error: ' . $this->link->error . ' | Query: ' . $query);
-            return false;
-        }
-
-        return true;
+        return $value;
     }
 }

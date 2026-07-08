@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Panel — {{ siteTitle }}</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+          integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- TailwindCSS v3 CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        outfit: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        red: {
+                            350: '#f87171'
+                        },
+                        brand: {
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Core Scripts -->
+    <script src="js/jquery-1.6.4.min.js" type="text/javascript"></script>
+    <script type="text/javascript" src="js/jquery-ui/jquery.ui.core.min.js"></script>
+    <script src="js/jquery-ui/jquery.ui.widget.min.js"    type="text/javascript"></script>
+    <script src="js/jquery-ui/jquery.ui.accordion.min.js" type="text/javascript"></script>
+    <script src="js/jquery-ui/jquery.effects.core.min.js" type="text/javascript"></script>
+    <script src="js/jquery-ui/jquery.effects.slide.min.js" type="text/javascript"></script>
+    <script src="js/jquery-ui/jquery.ui.mouse.min.js"     type="text/javascript"></script>
+    <script src="js/jquery-ui/jquery.ui.sortable.min.js"  type="text/javascript"></script>
+    
+    <!-- Jodit Text Editor (MIT Licensed, Open Source) -->
+    <link rel="stylesheet" href="https://unpkg.com/jodit@3.24.2/build/jodit.min.css"/>
+    <script src="https://unpkg.com/jodit@3.24.2/build/jodit.min.js"></script>
+    
+    <style type="text/css">
+        .glass-card {
+            background: rgba(30, 41, 59, 0.45);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #090c15;
+            color: #f1f5f9;
+        }
+        /* Custom styled scrolls */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+    
+    <script type="text/javascript">
+    $(document).ready(function () {
+        // Init Jodit Editor
+        const editors = document.querySelectorAll('.tinymce');
+        editors.forEach(editor => {
+            Jodit.make(editor, {
+                theme: 'dark',
+                height: 400,
+                showCharsCounter: false,
+                showWordsCounter: false,
+                showXPathInStatusbar: false
+            });
+        });
+    });
+    </script>
+</head>
+<body class="h-full flex flex-col justify-between">
+
+<!-- Top Admin Header Bar -->
+<header class="w-full bg-slate-950 border-b border-white/5 py-4 px-6 sticky top-0 z-30 shadow-md">
+    <div class="max-w-8xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+        <!-- Logo / Branding & Toggle -->
+        <div class="flex items-center gap-3">
+            <button type="button" id="sidebar-toggle" class="text-slate-400 hover:text-white transition-colors p-2 focus:outline-none hidden md:block">
+                <i class="fa-solid fa-bars text-lg"></i>
+            </button>
+            <div class="h-9 w-9 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-blue-600/20 shrink-0">
+                <i class="fa-solid fa-cube text-base"></i>
+            </div>
+            <div class="flex flex-col">
+                <h1 class="text-base font-bold font-outfit text-white leading-tight tracking-tight">Admin Dashboard</h1>
+                <p class="text-[10px] text-slate-500 font-semibold tracking-wider uppercase font-sans">CMS Console Panel</p>
+            </div>
+        </div>
+
+        <!-- Right info profile and logout -->
+        <div class="flex items-center gap-4 text-sm font-medium">
+            <div class="flex items-center gap-2.5 bg-white/5 border border-white/5 px-3 py-1.5 rounded-xl">
+                <div class="h-6 w-6 rounded-full bg-blue-500/20 text-blue-300 font-bold flex items-center justify-center text-xs border border-blue-500/30">
+                    {{ admin_username|slice(0,1)|upper }}
+                </div>
+                <span class="text-slate-300 text-xs">Hello, <strong class="text-white">{{ admin_username }}</strong></span>
+            </div>
+            <a href="?action=logout" 
+               class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 transition-all duration-200 cursor-pointer">
+                Logout <i class="fa-solid fa-sign-out-alt ml-1"></i>
+            </a>
+        </div>
+    </div>
+</header>
+
+<!-- Main Wrapper Layout (Sidebar + Content Area) -->
+<div class="w-full flex-grow max-w-8xl mx-auto flex flex-col md:flex-row gap-6 p-6">
+    
+    <!-- Sidebar Left Column -->
+    <aside id="main-sidebar" class="w-full md:w-[15%] shrink-0 flex flex-col gap-6 transition-all duration-300">
+
+        <!-- Admin Operations Menu -->
+        <div class="glass-card rounded-2xl p-5 shadow-lg shadow-black/10 flex flex-col gap-5">
+            
+            <!-- Section: Posts -->
+            <div class="sidebar-section">
+                <button type="button" class="w-full flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 font-sans px-2 focus:outline-none toggle-menu transition-colors hover:text-slate-300">
+                    <span>Posts</span>
+                    <i class="fa-solid fa-chevron-down transition-transform duration-200"></i>
+                </button>
+                <ul class="flex flex-col gap-1 text-sm font-medium">
+                    <li>
+                        <a href="post_list.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl {{ current_page == 'post_list.php' ? 'text-white bg-white/10' : 'text-slate-350 hover:text-white hover:bg-white/5' }} transition-all duration-200">
+                            <i class="fa-solid fa-file-invoice text-brand-400 text-xs"></i> Post List
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Section: Categories -->
+            <div class="sidebar-section">
+                <button type="button" class="w-full flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 font-sans px-2 focus:outline-none toggle-menu transition-colors hover:text-slate-300">
+                    <span>Categories</span>
+                    <i class="fa-solid fa-chevron-down transition-transform duration-200"></i>
+                </button>
+                <ul class="flex flex-col gap-1 text-sm font-medium">
+                    <li>
+                        <a href="catlist.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl {{ current_page == 'catlist.php' ? 'text-white bg-white/10' : 'text-slate-350 hover:text-white hover:bg-white/5' }} transition-all duration-200">
+                            <i class="fa-solid fa-folder-tree text-brand-400 text-xs"></i> Category List
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Section: Pages -->
+            <div class="sidebar-section">
+                <button type="button" class="w-full flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 font-sans px-2 focus:outline-none toggle-menu transition-colors hover:text-slate-300">
+                    <span>Pages</span>
+                    <i class="fa-solid fa-chevron-down transition-transform duration-200"></i>
+                </button>
+                <ul class="flex flex-col gap-1 text-sm font-medium">
+                    {% for p in sidebarPages %}
+                        <li>
+                            <a href="page.php?page_id={{ p.id }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-350 hover:text-white hover:bg-white/5 transition-all duration-200">
+                                <i class="fa-regular fa-file-lines text-brand-400 text-xs"></i> {{ p.name }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Admin Only Sections -->
+            {% if admin_role == '0' %}
+            
+            <!-- Section: Sliders -->
+            <div class="sidebar-section">
+                <button type="button" class="w-full flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 font-sans px-2 focus:outline-none toggle-menu transition-colors hover:text-slate-300">
+                    <span>Sliders</span>
+                    <i class="fa-solid fa-chevron-down transition-transform duration-200"></i>
+                </button>
+                <ul class="flex flex-col gap-1 text-sm font-medium hidden">
+                    <li>
+                        <a href="slider_list.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-350 hover:text-white hover:bg-white/5 transition-all duration-200">
+                            <i class="fa-solid fa-images text-brand-400 text-xs"></i> Slider List
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Section: Socials -->
+            <div class="sidebar-section">
+                <button type="button" class="w-full flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 font-sans px-2 focus:outline-none toggle-menu transition-colors hover:text-slate-300">
+                    <span>Socials</span>
+                    <i class="fa-solid fa-chevron-down transition-transform duration-200"></i>
+                </button>
+                <ul class="flex flex-col gap-1 text-sm font-medium hidden">
+                    <li>
+                        <a href="social_list.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-350 hover:text-white hover:bg-white/5 transition-all duration-200">
+                            <i class="fa-solid fa-globe text-brand-400 text-xs"></i> Social Media List
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Section: Site Settings -->
+            <div class="sidebar-section">
+                <button type="button" class="w-full flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 font-sans px-2 focus:outline-none toggle-menu transition-colors hover:text-slate-300">
+                    <span>Site Settings</span>
+                    <i class="fa-solid fa-chevron-down transition-transform duration-200"></i>
+                </button>
+                <ul class="flex flex-col gap-1 text-sm font-medium hidden">
+                    <li>
+                        <a href="titleslogan.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-350 hover:text-white hover:bg-white/5 transition-all duration-200">
+                            <i class="fa-solid fa-heading text-brand-400 text-xs"></i> Title & Logo
+                        </a>
+                    </li>
+                    <li>
+                        <a href="site_info_list.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-350 hover:text-white hover:bg-white/5 transition-all duration-200">
+                            <i class="fa-solid fa-circle-info text-brand-400 text-xs"></i> Site Info List
+                        </a>
+                    </li>
+                    <li>
+                        <a href="copyright.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-350 hover:text-white hover:bg-white/5 transition-all duration-200">
+                            <i class="fa-regular fa-copyright text-brand-400 text-xs"></i> Copyright Note
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- Section: Users / Account -->
+            <div class="sidebar-section">
+                <button type="button" class="w-full flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 font-sans px-2 focus:outline-none toggle-menu transition-colors hover:text-slate-300">
+                    <span>Account Profile</span>
+                    <i class="fa-solid fa-chevron-down transition-transform duration-200"></i>
+                </button>
+                <ul class="flex flex-col gap-1 text-sm font-medium hidden">
+                    <li>
+                        <a href="profile.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-350 hover:text-white hover:bg-white/5 transition-all duration-200">
+                            <i class="fa-regular fa-user text-brand-400 text-xs"></i> Edit Profile
+                        </a>
+                    </li>
+                    <li>
+                        <a href="change_password.php" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-350 hover:text-white hover:bg-white/5 transition-all duration-200">
+                            <i class="fa-solid fa-key text-brand-400 text-xs"></i> Change Password
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+    </aside>
+    
+    <!-- Content Area Right Column -->
+    <div id="main-content" class="flex-grow md:w-[85%] flex flex-col gap-6 transition-all duration-300 min-w-0">
+        {% block content %}{% endblock %}
+    </div><!-- .flex-grow -->
+</div><!-- .w-full -->
+
+<!-- Admin Footer -->
+<footer class="w-full bg-slate-950 border-t border-white/5 py-6 px-6 text-center text-xs text-slate-500 mt-12">
+    <div class="max-w-8xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p>&copy; {{ "now"|date("Y") }} <a href="#" class="text-slate-400 hover:text-white transition-colors duration-200">CMS Console</a>. All Rights Reserved.</p>
+        <div class="flex gap-4">
+            <a href="../index.php" class="text-slate-400 hover:text-white transition-colors duration-250">Back to Website</a>
+        </div>
+    </div>
+</footer>
+
+</body>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        // Dropdown Menu Toggles
+        const toggles = document.querySelectorAll('.toggle-menu');
+        toggles.forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const list = toggle.nextElementSibling;
+                const icon = toggle.querySelector('i');
+                list.classList.toggle('hidden');
+                icon.classList.toggle('rotate-180');
+            });
+        });
+
+        // Global Sidebar Toggle
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebar = document.getElementById('main-sidebar');
+        const mainContent = document.getElementById('main-content');
+        
+        if (sidebarToggle && sidebar && mainContent) {
+            sidebarToggle.addEventListener('click', () => {
+                if (sidebar.classList.contains('md:w-[15%]')) {
+                    sidebar.classList.remove('md:w-[15%]', 'w-full');
+                    sidebar.classList.add('hidden');
+                    mainContent.classList.remove('md:w-[85%]');
+                    mainContent.classList.add('w-full');
+                } else {
+                    sidebar.classList.remove('hidden');
+                    sidebar.classList.add('md:w-[15%]', 'w-full');
+                    mainContent.classList.remove('w-full');
+                    mainContent.classList.add('md:w-[85%]');
+                }
+            });
+        }
+    });
+</script>
+</html>

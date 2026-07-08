@@ -5,9 +5,9 @@
 [![Doctrine Migrations](https://img.shields.io/badge/doctrine-migrations%203.x-FC6A31.svg?style=flat-square)](https://www.doctrine-project.org/projects/migrations.html)
 [![License](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](LICENSE)
 
-A lightweight, robust, Object-Oriented PHP blogging engine and content management system. Built using raw PHP OOP principles, a clean Singleton MySQLi wrapper, Doctrine Migrations for schema versioning, and a fully typed DTO-driven seeder system.
+A lightweight, robust, Object-Oriented PHP blogging engine and content management system. Built using a modern **MVC (Model-View-Controller)** architecture, **Twig** templating, **Tailwind CSS** for styling, a clean Singleton MySQLi wrapper, Doctrine Migrations for schema versioning, and a fully typed DTO-driven seeder system.
 
-Designed for speed, ease of configuration, and flexibility, **Nexus CMS** serves as a production-ready starting template for custom PHP web applications or a showcase of pure OOP PHP design patterns.
+Designed for speed, ease of configuration, and flexibility, **Nexus CMS** serves as a production-ready starting template for custom PHP web applications or a showcase of modern OOP PHP design patterns.
 
 ---
 
@@ -35,7 +35,9 @@ Designed for speed, ease of configuration, and flexibility, **Nexus CMS** serves
 
 | Layer | Technology |
 |-------|-----------|
-| Runtime | PHP 8.0+ — OOP architecture, PSR-4 autoloading |
+| Runtime | PHP 8.0+ — OOP MVC Architecture, PSR-4 autoloading |
+| Frontend | Twig Templating Engine & Tailwind CSS v3 |
+| Rich Text | Jodit Editor (Open Source, MIT) |
 | Database | MySQL / MariaDB |
 | App DB layer | Singleton `mysqli` wrapper (`app/Core/Database.php`) |
 | Migrations | Doctrine Migrations 3.x + Doctrine DBAL 3.x |
@@ -51,13 +53,14 @@ Designed for speed, ease of configuration, and flexibility, **Nexus CMS** serves
 
 ```mermaid
 graph TD
-    A[Public / Admin Pages] --> B(app/bootstrap.php)
+    A[Public / Admin Routes] --> B(app/bootstrap.php)
     B --> C[Composer Autoloader]
     B --> D[Dotenv safeLoad]
-    B --> E[Singleton Database]
-    B --> F[Helpers — Format / Debug]
-    B --> G[Models Layer]
+    B --> E[Singleton Database & Twig Init]
+    B --> F[Controllers Layer]
+    F --> G[Models Layer]
     G --> H[Post · User · Category · Page · Contact · Site]
+    F --> V[Twig Views resources/views/]
 
     CLI1[bin/migrate] --> I[Doctrine Migrations]
     I --> J[AbstractMigration subclasses]
@@ -206,12 +209,15 @@ Seeder execution order (respects FK constraints):
 
 ## 📂 Directory Structure
 
-```text
-├── admin/                          # Fully featured CMS dashboard
-│   ├── index.php                   # Admin dashboard landing
-│   ├── login.php                   # Admin authentication
-│   └── post_list.php               # Post catalog & action handlers
+├── admin/                          # Legacy admin entry points (wrappers)
+│   ├── index.php                   # Routes to Admin\DashboardController
+│   └── ...                         # Other routed scripts
+├── resources/                      # Frontend and UI
+│   └── views/                      # Twig Templates
+│       ├── frontend/               # Public facing views
+│       └── dashboard/              # Admin dashboard views
 ├── app/                            # OOP core & business logic
+│   ├── Controllers/                # MVC Controllers (Admin & Frontend)
 │   ├── Core/                       # Singleton DB & session handling
 │   │   ├── Database.php
 │   │   └── Session.php
@@ -231,7 +237,7 @@ Seeder execution order (respects FK constraints):
 │   │   └── Format.php              # Content sanitization & formatting
 │   ├── Models/                     # Database-mapped PHP classes
 │   │   └── Post.php · User.php · Category.php · ... (6 total)
-│   └── bootstrap.php               # App entry bootstrap
+│   └── bootstrap.php               # App entry bootstrap & dependency injection
 ├── bin/                            # CLI entry points
 │   ├── make-migration              # Generate Laravel-style migration file
 │   ├── make-model                  # Generate Model class (+ optional migration)
@@ -304,6 +310,8 @@ Seeder execution order (respects FK constraints):
 6. **Start the Local Development Server**
    ```bash
    composer start
+   php -S localhost:8888
+
    ```
    App runs at **`http://localhost:8888`**.
 

@@ -1,0 +1,16 @@
+{% if sliders %}
+<div class="w-full glass-card rounded-2xl p-2.5 overflow-hidden shadow-lg shadow-black/10 mb-2">
+    <div class="slider-wrapper theme-default">
+        <div id="slider" class="nivoSlider rounded-xl overflow-hidden max-h-[350px] aspect-[960/350] bg-slate-900">
+            {% for slide in sliders %}
+                <a href="#">
+                    <img src="admin/{{ slide.image }}"
+                         alt="{{ slide.title }}"
+                         title="{{ slide.title }}"
+                         class="w-full h-full object-cover" />
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}

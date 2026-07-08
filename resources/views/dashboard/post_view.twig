@@ -1,0 +1,71 @@
+{% extends 'dashboard/base.twig' %}
+
+{% block content %}
+<div class="glass-card rounded-3xl p-6 sm:p-8 shadow-xl shadow-black/5 flex flex-col gap-6">
+    <div class="flex flex-col gap-1 border-b border-white/5 pb-4">
+        <h2 class="text-xl font-bold font-outfit text-white">View Post Details</h2>
+        <p class="text-slate-400 text-xs font-medium">Read-only presentation of post contents</p>
+    </div>
+
+    <form action="" method="post" class="flex flex-col gap-5">
+        <!-- Row 1: Title & Author -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-450">Post Title</span>
+                <div class="w-full bg-slate-900/50 border border-white/5 rounded-xl px-4 py-3 text-sm text-slate-300 font-medium">
+                    {{ post_result.title }}
+                </div>
+            </div>
+            
+            <div class="flex flex-col gap-1.5">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-455">Author Name</span>
+                <div class="w-full bg-slate-900/50 border border-white/5 rounded-xl px-4 py-3 text-sm text-slate-350">
+                    {{ post_result.author }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 2: Category & Tags -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-455">Category Name</span>
+                <div class="w-full bg-slate-900/50 border border-white/5 rounded-xl px-4 py-3 text-sm text-slate-350">
+                    {{ cat_name|default('None') }}
+                </div>
+            </div>
+            
+            <div class="flex flex-col gap-1.5">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-455">SEO Tags</span>
+                <div class="w-full bg-slate-900/50 border border-white/5 rounded-xl px-4 py-3 text-sm text-slate-350">
+                    {{ post_result.tags }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Featured Image -->
+        {% if post_result.image %}
+            <div class="flex flex-col gap-1.5">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-455">Featured Image</span>
+                <div class="rounded-xl overflow-hidden max-w-sm aspect-[16/10] bg-slate-900 border border-white/5">
+                    <img src="{{ post_result.image }}" class="w-full h-full object-cover" alt="Post featured image" />
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Post Body -->
+        <div class="flex flex-col gap-1.5">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-455">Post Content Body</span>
+            <div class="w-full bg-slate-900/50 border border-white/5 rounded-2xl p-6 text-sm text-slate-300 leading-relaxed max-h-[300px] overflow-y-auto">
+                {{ post_result.body|raw }}
+            </div>
+        </div>
+
+        <div class="mt-2">
+            <button type="submit" name="submit" 
+                    class="px-6 py-3 bg-brand-500 hover:bg-brand-600 active:bg-brand-700 text-white text-sm font-semibold rounded-xl transition-colors duration-200 cursor-pointer shadow-md shadow-brand-500/10">
+                Back to Post List
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

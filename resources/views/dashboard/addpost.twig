@@ -1,0 +1,83 @@
+{% extends 'dashboard/base.twig' %}
+{% import 'dashboard/components/button.twig' as btn %}
+
+{% block content %}
+<div class="glass-card rounded-3xl p-6 sm:p-8 shadow-xl shadow-black/5 flex flex-col gap-6">
+    <div class="flex flex-col gap-1 border-b border-white/5 pb-4">
+        <h2 class="text-xl font-bold font-outfit text-white">Add New Post</h2>
+        <p class="text-slate-400 text-xs font-medium">Create a new blog article to publish</p>
+    </div>
+
+    {% if error %}
+        <div class="bg-red-500/10 border border-red-500/20 text-red-350 px-4 py-3 rounded-xl text-sm flex items-center gap-2">
+            <i class="fa-solid fa-triangle-exclamation shrink-0"></i>
+            <span>{{ error }}</span>
+        </div>
+    {% endif %}
+
+    <form action="" method="post" enctype="multipart/form-data" class="flex flex-col gap-5">
+        <!-- CSRF Token -->
+        <input type="hidden" name="csrf_token" value="{{ csrfToken }}">
+
+        <!-- Row 1: Title & Author -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5">
+                <label for="post-title" class="text-xs font-semibold uppercase tracking-wider text-slate-400">Post Title</label>
+                <input type="text" id="post-title" name="title" placeholder="Enter post title..." 
+                       class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-655 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all duration-200"
+                       value="{{ post_data.title|default('') }}" required />
+            </div>
+            
+            <div class="flex flex-col gap-1.5">
+                <label for="post-author" class="text-xs font-semibold uppercase tracking-wider text-slate-400">Author Name</label>
+                <input type="text" id="post-author" name="author" 
+                       class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all duration-200"
+                       value="{{ admin_username }}" required />
+            </div>
+        </div>
+
+        <!-- Row 2: Category & Tags -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5">
+                <label for="post-cat" class="text-xs font-semibold uppercase tracking-wider text-slate-400">Category</label>
+                <select id="post-cat" name="cat" 
+                        class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all duration-200" required>
+                    <option value="">— Select Category —</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat.id }}" {% if post_data.cat == cat.id %}selected{% endif %}>
+                            {{ cat.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="flex flex-col gap-1.5">
+                <label for="post-tags" class="text-xs font-semibold uppercase tracking-wider text-slate-400">SEO Tags (comma-separated)</label>
+                <input type="text" id="post-tags" name="tags" placeholder="e.g. php, tutorials, design" 
+                       class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-655 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all duration-200"
+                       value="{{ post_data.tags|default('') }}" required />
+            </div>
+        </div>
+
+        <!-- Row 3: Image Upload -->
+        <div class="flex flex-col gap-1.5">
+            <label for="post-image" class="text-xs font-semibold uppercase tracking-wider text-slate-400">Featured Image</label>
+            <div class="w-full bg-slate-900 border border-white/10 rounded-xl p-4 flex flex-col gap-2">
+                <input id="post-image" name="image" type="file" class="text-sm text-slate-400 cursor-pointer" required />
+                <span class="text-[11px] text-slate-500">Allowed formats: JPG, JPEG, PNG, GIF. Max size: 1 MB.</span>
+            </div>
+        </div>
+
+        <!-- Row 4: TinyMCE Editor -->
+        <div class="flex flex-col gap-1.5">
+            <label for="mytextarea" class="text-xs font-semibold uppercase tracking-wider text-slate-400">Article Content</label>
+            <textarea id="mytextarea" class="tinymce" name="body">{{ post_data.body|default('') }}</textarea>
+        </div>
+
+        <div class="mt-2 flex gap-3">
+            {{ btn.primary('Publish Post', 'submit', 'submit', 'fa-solid fa-paper-plane') }}
+            {{ btn.link('Cancel', 'post_list.php') }}
+        </div>
+    </form>
+</div>
+{% endblock %}

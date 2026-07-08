@@ -34,7 +34,8 @@ if (!preg_match('/^[a-z][a-z0-9_]*$/', $migrationName)) {
 // ── Build names ───────────────────────────────────────────────────────────────
 $timestamp = date('Y_m_d_His');                           // 2026_07_04_063000
 $fileName  = "{$timestamp}_{$migrationName}.php";         // 2026_07_04_063000_create_settings_table.php
-$className = str_replace('_', '', ucwords($migrationName, '_')); // CreateSettingsTable
+$versionTs = str_replace('_', '', $timestamp);
+$className = 'Version' . $versionTs;                      // Version20260704063000
 
 // ── Destination ───────────────────────────────────────────────────────────────
 $migrationsDir = dirname(__DIR__) . '/app/Database/Migrations';
@@ -56,12 +57,14 @@ $downBody = "        // TODO: implement down()";
 if (preg_match('/^create_(.+)_table$/', $migrationName, $m)) {
     $table    = $m[1];
     $upBody   = <<<PHP
-        if (!\$schema->hasTable('{$table}')) {
-            \$t = \$schema->createTable('{$table}');
-            \$t->addColumn('id', 'integer', ['autoincrement' => true, 'unsigned' => true]);
-            // TODO: add columns here
-            \$t->setPrimaryKey(['id']);
+        if (\$schema->hasTable('{$table}')) {
+            return;
         }
+
+        \$t = \$schema->createTable('{$table}');
+        \$t->addColumn('id', 'integer', ['autoincrement' => true, 'unsigned' => true, 'notnull' => true]);
+        // TODO: add columns here
+        \$t->setPrimaryKey(['id']);
 PHP;
     $downBody = <<<PHP
         if (\$schema->hasTable('{$table}')) {

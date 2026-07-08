@@ -1,0 +1,17 @@
+{% extends 'frontend/base.twig' %}
+
+{% block content %}
+<article class="glass-card rounded-3xl p-6 sm:p-8 shadow-lg shadow-black/5">
+    <div class="flex flex-col gap-6">
+        <!-- Title Header -->
+        <h1 class="text-2xl sm:text-4xl font-extrabold font-outfit text-white leading-tight border-b border-white/5 pb-4">
+            {{ pageData.name }}
+        </h1>
+
+        <!-- Page body -->
+        <div class="text-slate-300 text-base leading-relaxed prose prose-invert max-w-none prose-headings:text-white prose-a:text-brand-400">
+            {{ pageData.body|raw }}
+        </div>
+    </div>
+</article>
+{% endblock %}

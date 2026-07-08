@@ -7,7 +7,7 @@ namespace App\Database\Migrations;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
-final class CreateUsersTable extends AbstractMigration
+final class Version20260704000009 extends AbstractMigration
 {
     public function getDescription(): string
     {

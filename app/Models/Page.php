@@ -1,53 +1,74 @@
 <?php
 
-/**
- * Page — all database operations for static pages.
- */
-class Page
+use App\Contracts\PageRepositoryInterface;
+
+class Page implements PageRepositoryInterface
 {
     public function __construct(private Database $db) {}
 
-    public function getAll(): mysqli_result|false
+    public function getAll(): array
     {
-        return $this->db->select("SELECT * FROM pages ORDER BY id ASC");
+        return $this->db->fetchAll("SELECT * FROM pages ORDER BY id ASC");
+    }
+
+    public function getBySlug(string $slug): array|false
+    {
+        return $this->db->fetchOne(
+            "SELECT * FROM pages WHERE slug = ? LIMIT 1",
+            's', [$slug]
+        );
     }
 
     public function getById(int $id): array|false
     {
-        $result = $this->db->select(
-            "SELECT * FROM pages WHERE id = $id LIMIT 1"
-        );
-        return $result ? $result->fetch_assoc() : false;
-    }
-
-    public function getByTitle(int $id): array|false
-    {
-        $result = $this->db->select(
-            "SELECT name FROM pages WHERE id = $id LIMIT 1"
-        );
-        return $result ? $result->fetch_assoc() : false;
-    }
-
-    public function create(string $name, string $body): bool
-    {
-        $name = $this->db->escape(trim($name));
-        $body = $this->db->escape($body);
-        return $this->db->insert(
-            "INSERT INTO pages (name, body) VALUES ('$name', '$body')"
+        return $this->db->fetchOne(
+            "SELECT * FROM pages WHERE id = ? LIMIT 1",
+            'i', [$id]
         );
     }
 
-    public function update(int $id, string $name, string $body): bool
+    public function create(array $data): bool
     {
-        $name = $this->db->escape(trim($name));
-        $body = $this->db->escape($body);
-        return $this->db->update(
-            "UPDATE pages SET name = '$name', body = '$body' WHERE id = $id"
+        return (bool) $this->db->insert(
+            "INSERT INTO pages (name, slug, body, meta_title, meta_description, meta_keywords)
+             VALUES (?, ?, ?, ?, ?, ?)",
+            'ssssss',
+            [
+                trim($data['name']),
+                trim($data['slug']),
+                $data['body'],
+                trim($data['meta_title'] ?? ''),
+                trim($data['meta_description'] ?? ''),
+                trim($data['meta_keywords'] ?? '')
+            ]
+        );
+    }
+
+    public function update(int $id, array $data): bool
+    {
+        return (bool) $this->db->update(
+            "UPDATE pages SET
+                name = ?, slug = ?, body = ?,
+                meta_title = ?, meta_description = ?, meta_keywords = ?
+             WHERE id = ?",
+            'ssssssi',
+            [
+                trim($data['name']),
+                trim($data['slug']),
+                $data['body'],
+                trim($data['meta_title'] ?? ''),
+                trim($data['meta_description'] ?? ''),
+                trim($data['meta_keywords'] ?? ''),
+                $id
+            ]
         );
     }
 
     public function delete(int $id): bool
     {
-        return $this->db->delete("DELETE FROM pages WHERE id = $id");
+        return (bool) $this->db->delete(
+            "DELETE FROM pages WHERE id = ?",
+            'i', [$id]
+        );
     }
 }

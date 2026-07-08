@@ -1,0 +1,40 @@
+{% extends 'dashboard/base.twig' %}
+{% import 'dashboard/components/button.twig' as btn %}
+{% import 'dashboard/components/input.twig' as form %}
+
+{% block content %}
+<div class="glass-card rounded-3xl p-6 sm:p-8 shadow-xl shadow-black/5 flex flex-col gap-6">
+    <div class="flex flex-col gap-1 border-b border-white/5 pb-4">
+        <h2 class="text-xl font-bold font-outfit text-white">Add New User</h2>
+        <p class="text-slate-400 text-xs font-medium">Create a new user profile with specific authorization roles</p>
+    </div>
+
+    {% if success %}
+        <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-350 px-4 py-3 rounded-xl text-sm flex items-center gap-2">
+            <i class="fa-solid fa-circle-check shrink-0"></i>
+            <span>{{ success }}</span>
+        </div>
+    {% endif %}
+    {% if error %}
+        <div class="bg-red-500/10 border border-red-500/20 text-red-350 px-4 py-3 rounded-xl text-sm flex items-center gap-2">
+            <i class="fa-solid fa-triangle-exclamation shrink-0"></i>
+            <span>{{ error }}</span>
+        </div>
+    {% endif %}
+
+    <form action="" method="post" class="flex flex-col gap-5 max-w-lg">
+        <!-- CSRF Token -->
+        <input type="hidden" name="csrf_token" value="{{ csrfToken }}">
+
+        {{ form.text('username', 'Username', username|default(''), 'Enter username', true, 'text', 'new-username', 'fa-regular fa-user') }}
+        {{ form.password('password', 'Password', true, 'new-password', 'fa-solid fa-lock') }}
+        
+        {{ form.select('role', 'User Role', {'0': 'Admin', '1': 'Author', '2': 'Editor'}, '', true, 'user-role', 'fa-solid fa-user-shield') }}
+
+        <div class="mt-2 flex gap-3">
+            {{ btn.primary('Create User', 'submit', 'submit', 'fa-solid fa-user-plus') }}
+            {{ btn.link('Cancel', 'user_list.php') }}
+        </div>
+    </form>
+</div>
+{% endblock %}

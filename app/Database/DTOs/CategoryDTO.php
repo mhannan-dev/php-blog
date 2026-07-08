@@ -10,7 +10,8 @@ namespace App\Database\DTOs;
 class CategoryDTO
 {
     public function __construct(
-        public readonly string $name
+        public readonly string $name,
+        public readonly string $slug
     ) {}
 
     /**
@@ -20,6 +21,7 @@ class CategoryDTO
     {
         return [
             'name' => $this->name,
+            'slug' => $this->slug,
         ];
     }
 }

@@ -7,7 +7,7 @@ namespace App\Database\Migrations;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
-final class CreateThemesTable extends AbstractMigration
+final class Version20260704000012 extends AbstractMigration
 {
     public function getDescription(): string
     {

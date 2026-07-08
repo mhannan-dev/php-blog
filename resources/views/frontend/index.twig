@@ -1,0 +1,100 @@
+{% extends 'frontend/base.twig' %}
+
+{% block slider %}
+    {# Include the slider only on the homepage #}
+    {% include 'frontend/partials/slider.twig' %}
+{% endblock %}
+
+{% block content %}
+
+<div class="flex flex-col gap-8">
+    {% if posts|length > 0 %}
+        {% for post in posts %}
+            <!-- Premium Post Card -->
+            <article class="glass-card rounded-3xl overflow-hidden shadow-lg shadow-black/5 hover:shadow-brand-500/5 hover:-translate-y-1 transition-all duration-300 flex flex-col md:flex-row gap-6 p-6">
+                
+                {% if post.image %}
+                    <!-- Post Thumbnail -->
+                    <div class="w-full md:w-2/5 shrink-0 rounded-2xl overflow-hidden aspect-[16/10] bg-slate-900 border border-white/5 relative group">
+                        <a href="post.php?slug={{ post.slug }}" class="block w-full h-full">
+                            <img src="admin/{{ post.image }}"
+                                 alt="{{ post.title }}"
+                                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                        </a>
+                    </div>
+                {% endif %}
+
+                <!-- Post Body info -->
+                <div class="flex flex-col justify-between py-1 flex-grow gap-4">
+                    <div class="flex flex-col gap-3">
+                        <!-- Title -->
+                        <h2 class="text-xl sm:text-2xl font-bold font-outfit text-white leading-snug hover:text-brand-300 transition-colors duration-200">
+                            <a href="post.php?slug={{ post.slug }}">
+                                {{ post.title }}
+                            </a>
+                        </h2>
+                        
+                        <!-- Metadata Info -->
+                        <div class="flex items-center gap-3 text-xs text-slate-400 font-medium tracking-wide">
+                            <span class="flex items-center gap-1.5">
+                                <i class="fa-regular fa-user text-brand-400"></i>
+                                {{ post.author }}
+                            </span>
+                            <span class="w-1 h-1 rounded-full bg-slate-700"></span>
+                            <span class="flex items-center gap-1.5">
+                                <i class="fa-regular fa-calendar text-brand-400"></i>
+                                {{ post.date|date("F j, Y") }}
+                            </span>
+                        </div>
+
+                        <!-- Description Snippet -->
+                        <p class="text-slate-350 text-sm leading-relaxed line-clamp-3">
+                            {{ post.body|striptags|slice(0, 220) }}...
+                        </p>
+                    </div>
+
+                    <!-- Footer details -->
+                    <div class="flex justify-between items-center mt-2 border-t border-white/5 pt-4">
+                        <a href="post.php?slug={{ post.slug }}" 
+                           class="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-400 hover:text-brand-300 transition-colors duration-200 uppercase tracking-wider">
+                            Read Full Article <i class="fa-solid fa-arrow-right-long"></i>
+                        </a>
+                    </div>
+                </div>
+            </article>
+        {% endfor %}
+    {% else %}
+        <div class="glass-card rounded-2xl p-8 text-center text-slate-400 shadow-md">
+            <i class="fa-solid fa-folder-open text-slate-600 text-3xl mb-3"></i>
+            <p>No posts found in the database.</p>
+        </div>
+    {% endif %}
+
+    <!-- Pagination -->
+    {% if totalPages > 1 %}
+        <nav class="flex justify-center items-center gap-2 mt-4">
+            {% if currentPage > 1 %}
+                <a href="?page={{ currentPage - 1 }}" 
+                   class="h-10 px-4 rounded-xl border border-white/10 text-sm font-semibold flex items-center text-slate-300 hover:bg-white/5 hover:text-white transition-colors duration-200">&laquo; Prev</a>
+            {% endif %}
+
+            <div class="flex items-center gap-1.5">
+                {% for i in 1..totalPages %}
+                    {% if i == currentPage %}
+                        <span class="h-10 w-10 rounded-xl bg-brand-500 text-white font-bold flex items-center justify-center text-sm ring-4 ring-brand-500/20">{{ i }}</span>
+                    {% else %}
+                        <a href="?page={{ i }}" 
+                           class="h-10 w-10 rounded-xl border border-white/10 text-slate-300 font-semibold flex items-center justify-center text-sm hover:bg-white/5 hover:text-white transition-colors duration-250">{{ i }}</a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            {% if currentPage < totalPages %}
+                <a href="?page={{ currentPage + 1 }}" 
+                   class="h-10 px-4 rounded-xl border border-white/10 text-sm font-semibold flex items-center text-slate-300 hover:bg-white/5 hover:text-white transition-colors duration-200">Next &raquo;</a>
+            {% endif %}
+        </nav>
+    {% endif %}
+</div>
+
+{% endblock %}
