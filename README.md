@@ -209,6 +209,7 @@ Seeder execution order (respects FK constraints):
 
 ## 📂 Directory Structure
 
+```text
 ├── admin/                          # Legacy admin entry points (wrappers)
 │   ├── index.php                   # Routes to Admin\DashboardController
 │   └── ...                         # Other routed scripts
